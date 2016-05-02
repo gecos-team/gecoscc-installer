@@ -1,0 +1,128 @@
+#!/bin/bash
+#
+# supervisord
+#
+# chkconfig: - 98 02
+# description: GecosCC UI Supervisor
+
+### BEGIN INIT INFO
+# Provides: supervisord
+# Required-Start: $local_fs $network $remote_fs
+# Required-Stop: $local_fs $network $remote_fs
+# Should-Start: $named $time
+# Should-Stop: $named $time
+# Short-Description: Startup script for supervisord
+# Description: GecosCC UI Supervisor
+### END INIT INFO
+
+# Source function library
+. /etc/init.d/functions
+
+# Service-specific variables
+
+# Service execution details
+
+EXECUTE="/opt/gecosccui-development/bin/supervisord"
+PROCESS="supervisord"
+PROGRAM="supervisord"
+TIMEOUT="5"
+
+[ -e /etc/sysconfig/$PROGRAM ] && . /etc/sysconfig/$PROGRAM
+
+PID_FILE=${PIDFILE-/var/run/supervisord/supervisord.pid}
+LCK_FILE=${LOCKFILE-/var/lock/subsys/supervisord}
+LOG_FILE=${LOGFILE-/var/log/supervisord/supervisord.log}
+RUN_USER=${RUNUSER-root}
+
+RETVAL=0
+
+start() {
+    [ -x $EXECUTE ] || exit 5
+
+    umask 0027
+    echo -n "Starting $PROGRAM: "
+    # We do NOT expect executable to fork. Disown.
+    daemon --user "$RUN_USER"     \
+           --pidfile="$PID_FILE"  \
+           "$EXECUTE  -n -c /opt/gecosccui-development/supervisord.conf &> /dev/null & child_pid=\$! && disown \$child_pid && echo \$child_pid > '$PID_FILE'"
+    RETVAL=$?
+    echo
+    if [ $RETVAL -eq 0 ] ; then
+        touch $LCK_FILE
+    else
+        return $RETVAL
+    fi
+    return $RETVAL
+}
+
+stop() {
+    echo -n "Stopping $PROGRAM: "
+    killproc -p $PID_FILE -d $TIMEOUT $PROCESS
+    RETVAL=$?
+    echo
+    if [ $RETVAL -eq 0 ] ; then
+        rm -f $LCK_FILE
+    else
+        return $RETVAL
+    fi
+    rm -f $PID_FILE
+    return $RETVAL
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    restart
+}
+
+force_reload() {
+    restart
+}
+
+rh_status() {
+    status -p $PID_FILE $PROCESS
+    return $?
+}
+
+rh_status_quiet() {
+    rh_status >/dev/null 2>&1
+    return $?
+}
+
+case "$1" in
+    start)
+        rh_status_quiet && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_quiet
+        [ $? -lt 2 ] || exit 0
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    reload)
+        rh_status_quiet || exit 7
+        $1
+        ;;
+    force-reload)
+        force_reload
+        ;;
+    status)
+        rh_status
+        exit $?
+        ;;
+    condrestart|try-restart)
+        rh_status_quiet || exit 0
+        restart
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
+        exit 2
+esac
+
+exit $RETVAL
