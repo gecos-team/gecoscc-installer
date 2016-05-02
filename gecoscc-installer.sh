@@ -96,9 +96,10 @@ echo "Installing supervisor"
 pip install supervisor
 echo "Installing GECOS Control Center UI"
 pip install "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
-
-install_template "/etc/init.d/supervisord" $SUPERVISOR_TEMPLATE
-
+echo "Configuring supervisord start script"
+install_template "/etc/init.d/supervisord" supervisord
+install_template "/opt/gecoscc-$GECOSCC_VERSION/supervisor.conf" supervisor.conf
+install_template "/opt/gecoscc-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini
 
 #TODO: configure gecoscc and supervisor
 ;;
@@ -112,6 +113,8 @@ tar xzf /tmp/nginx-$NGINX_VERSION.tar.gz
 cd /tmp/nginx-$NGINX_VERSION
 ./configure --prefix=/opt/nginx --conf-path=/opt/nginx/etc/nginx.conf --sbin-path=/opt/nginx/bin/nginx
 make && make install
+echo "Configuring NGINX to serve GECOS Control Center"
+install_template "/opt/nginx/sites-available/gecoscc.conf" nginx.conf
 
 ;;
 POLICIES)
