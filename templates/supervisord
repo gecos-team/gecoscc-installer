@@ -22,17 +22,17 @@
 
 # Service execution details
 
-EXECUTE="/opt/gecosccui-development/bin/supervisord"
+EXECUTE="/opt/gecosccui-$GECOSCC_VERSION/bin/supervisord"
 PROCESS="supervisord"
 PROGRAM="supervisord"
 TIMEOUT="5"
 
 [ -e /etc/sysconfig/$PROGRAM ] && . /etc/sysconfig/$PROGRAM
 
-PID_FILE=${PIDFILE-/var/run/supervisord/supervisord.pid}
-LCK_FILE=${LOCKFILE-/var/lock/subsys/supervisord}
-LOG_FILE=${LOGFILE-/var/log/supervisord/supervisord.log}
-RUN_USER=${RUNUSER-root}
+PID_FILE=/var/run/supervisord/supervisord.pid}
+LCK_FILE=/var/lock/subsys/supervisord}
+LOG_FILE=/var/log/supervisord/supervisord.log}
+RUN_USER=root
 
 RETVAL=0
 
@@ -44,7 +44,7 @@ start() {
     # We do NOT expect executable to fork. Disown.
     daemon --user "$RUN_USER"     \
            --pidfile="$PID_FILE"  \
-           "$EXECUTE  -n -c /opt/gecosccui-development/supervisord.conf &> /dev/null & child_pid=\$! && disown \$child_pid && echo \$child_pid > '$PID_FILE'"
+           "$EXECUTE  -n -c /opt/gecosccui-$GECOSCC_VERSION/supervisord.conf &> /dev/null & child_pid=\$! && disown \$child_pid && echo \$child_pid > '$PID_FILE'"
     RETVAL=$?
     echo
     if [ $RETVAL -eq 0 ] ; then
