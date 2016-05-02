@@ -29,9 +29,9 @@ TIMEOUT="5"
 
 [ -e /etc/sysconfig/$PROGRAM ] && . /etc/sysconfig/$PROGRAM
 
-PID_FILE=/var/run/supervisord/supervisord.pid}
-LCK_FILE=/var/lock/subsys/supervisord}
-LOG_FILE=/var/log/supervisord/supervisord.log}
+PID_FILE=/var/run/supervisord/supervisord.pid
+LCK_FILE=/var/lock/subsys/supervisord
+LOG_FILE=/var/log/supervisord/supervisord.log
 RUN_USER=root
 
 RETVAL=0
