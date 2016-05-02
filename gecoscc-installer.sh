@@ -14,20 +14,20 @@
 set -u
 set -e
 
-ORGANIZATION="Junta de Andalucia"
+export ORGANIZATION="Junta de Andalucia"
 
-CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.1.7-1.el6.x86_64.rpm"
-CHEF_USER_NAME='admin'
-CHEF_FIRST_NAME='Administrator'
-CHEF_LAST_NAME=''
-CHEF_EMAIL='gecos@guadalinex.org'
-CHEF_PASSWORD='gecos'
-CHEF_ADMIN_KEYFILE='/tmp/admin.pem'
-CHEF_ORGANIZATION_KEYFILE='/tmp/admin.pem'
+export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.1.7-1.el6.x86_64.rpm"
+export CHEF_USER_NAME='admin'
+export CHEF_FIRST_NAME='Administrator'
+export CHEF_LAST_NAME=''
+export CHEF_EMAIL='gecos@guadalinex.org'
+export CHEF_PASSWORD='gecos'
+export CHEF_ADMIN_KEYFILE='/tmp/admin.pem'
+export CHEF_ORGANIZATION_KEYFILE='/tmp/admin.pem'
 
-GECOSCC_VERSION='2.1.10'
+export GECOSCC_VERSION='2.1.10'
 
-NGINX_VERSION='1.4.3'
+export NGINX_VERSION='1.4.3'
 
 TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/templates/"
 
