@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # GECOS Control Center Installer
+# Download it from http://bit.ly/gecoscc-installer
 
 # Authors: 
 #   Alfonso de Cala <alfonso.cala@juntadeandalucia.es>
