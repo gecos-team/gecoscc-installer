@@ -14,7 +14,8 @@
 set -u
 set -e
 
-export ORGANIZATION="Junta de Andalucia"
+export ORGANIZATION="Your Organization"
+export SERVER_IP="127.0.0.1"
 
 export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.1.7-1.el6.x86_64.rpm"
 export CHEF_USER_NAME='admin'
@@ -24,10 +25,16 @@ export CHEF_EMAIL='gecos@guadalinex.org'
 export CHEF_PASSWORD='gecos'
 export CHEF_ADMIN_KEYFILE='/tmp/admin.pem'
 export CHEF_ORGANIZATION_KEYFILE='/tmp/admin.pem'
+export CHEF_URL="https://localhost/"
 
 export GECOSCC_VERSION='2.1.10'
 
 export NGINX_VERSION='1.4.3'
+
+export MONGO_URL="mongodb://localhost:27017/gecoscc"
+
+export RUBY_GEMS_REPOSITORY="http://rubygems.org"
+export HELP_URL="http://forja.guadalinex.org/webs/gecos/doc/v2/doku.php"
 
 TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/templates/"
 
@@ -61,8 +68,9 @@ CHEF)
     rpm -Uvh /tmp/chef-server.rpm
     echo "Configuring"
     chef-server-ctl reconfigure
-#Chef12    chef-server-ctl user-create "$CHEF_USER_NAME" "$CHEF_FIRST_NAME" "$CHEF_LAST_NAME" "$CHEF_EMAIL" "$CHEF_PASSWORD" --filename "$CHEF_ADMIN_KEYFILE"
-#Chef12    chef-server-ctl org-create short_name "$ORGANIZATION" --association_user "$CHEF_USER_NAME" --filename "$CHEF_ORGANIZATION_KEYFILE" 
+#Change for Chef12:
+#    chef-server-ctl user-create "$CHEF_USER_NAME" "$CHEF_FIRST_NAME" "$CHEF_LAST_NAME" "$CHEF_EMAIL" "$CHEF_PASSWORD" --filename "$CHEF_ADMIN_KEYFILE"
+#    chef-server-ctl org-create short_name "$ORGANIZATION" --association_user "$CHEF_USER_NAME" --filename "$CHEF_ORGANIZATION_KEYFILE" 
 ;;
 MONGODB)
     echo "INSTALLING MONGODB SERVER"
@@ -101,7 +109,7 @@ install_template "/etc/init.d/supervisord" supervisord
 install_template "/opt/gecoscc-$GECOSCC_VERSION/supervisor.conf" supervisor.conf
 install_template "/opt/gecoscc-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini
 
-#TODO: configure gecoscc and supervisor
+#TODO: configure gecoscc template
 ;;
 CC)
     echo "INSTALLING NGINX WEB SERVER"
