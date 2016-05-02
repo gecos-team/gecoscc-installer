@@ -14,6 +14,7 @@
 set -u
 set -e
 
+ORGANIZATION="Junta de Andalucia"
 
 CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.1.7-1.el6.x86_64.rpm"
 CHEF_USER_NAME='admin'
@@ -22,20 +23,22 @@ CHEF_LAST_NAME=''
 CHEF_EMAIL='gecos@guadalinex.org'
 CHEF_PASSWORD='gecos'
 CHEF_ADMIN_KEYFILE='/tmp/admin.pem'
-CHEF_ORGANIZATION="Junta de Andalucia"
 CHEF_ORGANIZATION_KEYFILE='/tmp/admin.pem'
 
 GECOSCC_VERSION='2.1.10'
 
 NGINX_VERSION='1.4.3'
 
+TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/templates/"
+
 # FUNCTIONS
 
 # Download a template, replace vars and copy it to a defined destination
+# PARAMETERS: Destination full path, origin url 
 function install_template {
     filename=$(basename "$1")
     curl $2 > /tmp/$filename
-    cp /tmp/$filename $1
+    envsubst < /tmp/$filename > $1
 }
 
 
@@ -59,7 +62,7 @@ CHEF)
     echo "Configuring"
     chef-server-ctl reconfigure
 #Chef12    chef-server-ctl user-create "$CHEF_USER_NAME" "$CHEF_FIRST_NAME" "$CHEF_LAST_NAME" "$CHEF_EMAIL" "$CHEF_PASSWORD" --filename "$CHEF_ADMIN_KEYFILE"
-#Chef12    chef-server-ctl org-create short_name "$CHEF_ORGANIZATION" --association_user "$CHEF_USER_NAME" --filename "$CHEF_ORGANIZATION_KEYFILE" 
+#Chef12    chef-server-ctl org-create short_name "$ORGANIZATION" --association_user "$CHEF_USER_NAME" --filename "$CHEF_ORGANIZATION_KEYFILE" 
 ;;
 MONGODB)
     echo "INSTALLING MONGODB SERVER"
