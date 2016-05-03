@@ -37,7 +37,7 @@ export NGINX_VERSION='1.4.3'
 
 export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
-export RUBY_GEMS_REPOSITORY="http://rubygems.org"
+export RUBY_GEMS_REPOSITORY_URL="http://rubygems.org"
 export HELP_URL="http://forja.guadalinex.org/webs/gecos/doc/v2/doku.php"
 
 TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/templates/"
@@ -95,7 +95,7 @@ CHEF)
     rpm -Uvh /tmp/chef-server.rpm
     echo "Configuring"
     chef-server-ctl reconfigure
-#Change for Chef12:
+#Changes for Chef12:
 #    chef-server-ctl user-create "$CHEF_USER_NAME" "$CHEF_FIRST_NAME" "$CHEF_LAST_NAME" "$CHEF_EMAIL" "$CHEF_PASSWORD" --filename "$CHEF_ADMIN_KEYFILE"
 #    chef-server-ctl org-create short_name "$ORGANIZATION" --association_user "$CHEF_USER_NAME" --filename "$CHEF_ORGANIZATION_KEYFILE" 
 ;;
@@ -157,16 +157,19 @@ chkconfig supervisord on
 NGINX)
     echo "INSTALLING NGINX WEB SERVER"
 
-echo "Installing some development packages"
-install_package gcc
-install_package pcre-devel
-install_package openssl-devel
-cd /tmp/ 
-curl -L "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz" > /tmp/nginx-$NGINX_VERSION.tar.gz
-tar xzf /tmp/nginx-$NGINX_VERSION.tar.gz
-cd /tmp/nginx-$NGINX_VERSION
-./configure --prefix=/opt/nginx --conf-path=/opt/nginx/etc/nginx.conf --sbin-path=/opt/nginx/bin/nginx
-make && make install
+if [ ! -e /opt/nginx/bin/nginx ]
+then
+    echo "Installing some development packages"
+    install_package gcc
+    install_package pcre-devel
+    install_package openssl-devel
+    cd /tmp/ 
+    curl -L "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz" > /tmp/nginx-$NGINX_VERSION.tar.gz
+    tar xzf /tmp/nginx-$NGINX_VERSION.tar.gz
+    cd /tmp/nginx-$NGINX_VERSION
+    ./configure --prefix=/opt/nginx --conf-path=/opt/nginx/etc/nginx.conf --sbin-path=/opt/nginx/bin/nginx
+    make && make install
+fi
 echo "Configuring NGINX to serve GECOS Control Center"
 if [ ! -e /opt/nginx/etc/sites-available ]; then 
     mkdir /opt/nginx/etc/sites-available/
