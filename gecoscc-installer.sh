@@ -51,15 +51,17 @@ function install_template {
     curl "$TEMPLATES_URL/$2" > /tmp/$filename.tmp
     if [ "$4" == "-subst" ] 
         then
-            rm $1
-            while read -r line ; do
-                while [[ "$line" =~ (\$\{[a-zA-Z_][a-zA-Z_0-9]*\}) ]] ; do
-                    LHS=${BASH_REMATCH[1]}
-                    RHS="$(eval echo "\"$LHS\"")"
-                    line=${line//$LHS/$RHS}
-                done
-                echo "$line" >> $1
-            done < /tmp/$filename.tmp
+            line="$(cat /tmp/$filename.tmp; echo -n a)"
+            end_offset=${#line}
+            while [[ "${line:0:$end_offset}" =~ (.*)(\$\{([a-zA-Z_][a-zA-Z_0-9]*)\})(.*) ]] ; do
+                PRE="${BASH_REMATCH[1]}"
+                POST="${BASH_REMATCH[4]}${line:$end_offset:${#line}}"
+                VARNAME="${BASH_REMATCH[3]}"
+                eval 'VARVAL="$'$VARNAME'"'
+                line="$PRE$VARVAL$POST"
+                end_offset=${#PRE}
+            done
+            echo -n "${line:0:-1}" > $1
         else
             cp /tmp/$filename.tmp $1
     fi
