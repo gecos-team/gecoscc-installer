@@ -76,7 +76,7 @@ CHEF)
 MONGODB)
     echo "INSTALLING MONGODB SERVER"
 # Add mongodb repository
-cat > /tmp/mongodb.repo <<EOF
+cat > /etc/yum.repos.d/mongodb.repo <<EOF
 [mongodb]
 name=mongodb RPM Repository
 baseurl=http://downloads-distro.mongodb.org/repo/redhat/os/x86_64
