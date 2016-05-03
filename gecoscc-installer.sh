@@ -45,8 +45,13 @@ TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/ma
 # PARAMETERS: Destination full path, origin url 
 function install_template {
     filename=$(basename "$1")
-    curl $2 > /tmp/$filename
-    envsubst < /tmp/$filename > $1
+    curl "$TEMPLATES_URL/$2" > /tmp/$filename
+    if [ "$3" eq "-subst" ] 
+        then
+            envsubst < /tmp/$filename > $1
+        else
+            cp /tmp/$filename $1
+    fi
 }
 
 
@@ -94,7 +99,7 @@ EOF
 # Installing mongodb package
 yum install mongodb-org
 # TODO Run mongodb service
-install_template "/etc/init.d/mongod" mongod
+install_template "/etc/init.d/mongod" mongod -nosubst
 ;;
 
 
@@ -116,11 +121,9 @@ pip install supervisor
 echo "Installing GECOS Control Center UI"
 pip install "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
 echo "Configuring supervisord start script"
-install_template "/etc/init.d/supervisord" supervisord
-install_template "/opt/gecoscc-$GECOSCC_VERSION/supervisor.conf" supervisor.conf
-install_template "/opt/gecoscc-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini
-
-#TODO: configure gecoscc template
+install_template "/etc/init.d/supervisord" supervisord -subst
+install_template "/opt/gecoscc-$GECOSCC_VERSION/supervisor.conf" supervisor.conf -subst
+install_template "/opt/gecoscc-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini -subst
 ;;
 
 
@@ -135,7 +138,7 @@ cd /tmp/nginx-$NGINX_VERSION
 ./configure --prefix=/opt/nginx --conf-path=/opt/nginx/etc/nginx.conf --sbin-path=/opt/nginx/bin/nginx
 make && make install
 echo "Configuring NGINX to serve GECOS Control Center"
-install_template "/opt/nginx/sites-available/gecoscc.conf" nginx.conf
+install_template "/opt/nginx/sites-available/gecoscc.conf" nginx.conf -subst
 ;;
 
 
