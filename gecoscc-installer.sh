@@ -100,6 +100,8 @@ CHEF)
 #Changes for Chef12:
 #    chef-server-ctl user-create "$CHEF_USER_NAME" "$CHEF_FIRST_NAME" "$CHEF_LAST_NAME" "$CHEF_EMAIL" "$CHEF_PASSWORD" --filename "$CHEF_ADMIN_KEYFILE"
 #    chef-server-ctl org-create short_name "$ORGANIZATION" --association_user "$CHEF_USER_NAME" --filename "$CHEF_ORGANIZATION_KEYFILE" 
+     echo "Opening port in Firewall
+     lokkit -s https
 ;;
 
 
@@ -126,6 +128,7 @@ chkconfig mongod on
 
 CC)
     echo "INSTALLING GECOS CONTROL CENTER"
+#TO-DO: Stop supervisord before reinstalling (python file could be locked)
 echo "Adding EPEL repository"
 if ! rpm -q epel-release-6-8.noarch; then
     rpm -ivh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
@@ -186,6 +189,8 @@ fi
 echo "Starting NGINX on boot"
 install_template "/etc/init.d/nginx" nginx 755 -nosubst
 chkconfig nginx on
+echo "Opening port in Firewall
+lokkit -s http
 ;;
 
 
