@@ -143,8 +143,12 @@ cd /tmp/nginx-$NGINX_VERSION
 ./configure --prefix=/opt/nginx --conf-path=/opt/nginx/etc/nginx.conf --sbin-path=/opt/nginx/bin/nginx
 make && make install
 echo "Configuring NGINX to serve GECOS Control Center"
-mkdir /opt/nginx/etc/sites-available/
-mkdir /opt/nginx/etc/sites-enabled/
+if [ ! -e /opt/nginx/etc/sites-available ]; then 
+    mkdir /opt/nginx/etc/sites-available/
+fi
+if [ ! -e /opt/nginx/etc/sites-enabled ]; then 
+    mkdir /opt/nginx/etc/sites-enabled/
+fi
 install_template "/opt/nginx/etc/sites-available/gecoscc.conf" nginx.conf -subst
 ln -s /opt/nginx/etc/sites-available/nginx.conf /opt/nginx/etc/sites-enabled/
 echo "Starting NGINX on boot"
