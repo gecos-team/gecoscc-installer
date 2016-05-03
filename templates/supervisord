@@ -44,7 +44,7 @@ start() {
     # We do NOT expect executable to fork. Disown.
     daemon --user "$RUN_USER"     \
            --pidfile="$PID_FILE"  \
-           "$EXECUTE  -n -c /opt/gecosccui-$GECOSCC_VERSION/supervisord.conf &> /dev/null & child_pid=\$! && disown \$child_pid && echo \$child_pid > '$PID_FILE'"
+           "$EXECUTE  -n -c /opt/gecosccui-${GECOSCC_VERSION}/supervisord.conf &> /dev/null & child_pid=\$! && disown \$child_pid && echo \$child_pid > '$PID_FILE'"
     RETVAL=$?
     echo
     if [ $RETVAL -eq 0 ] ; then

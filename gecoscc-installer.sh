@@ -174,7 +174,7 @@ fi
 if [ ! -e /opt/nginx/etc/sites-enabled ]; then 
     mkdir /opt/nginx/etc/sites-enabled/
 fi
-install_template "/opt/nginx/etc/sites-available/gecoscc.conf" nginx.conf 644 -subst
+install_template "/opt/nginx/etc/sites-available/gecoscc.conf" nginx-gecoscc.conf 644 -subst
 if [ ! -e /opt/nginx/etc/sites-enabled/gecoscc.conf ]; then 
     ln -s /opt/nginx/etc/sites-available/gecoscc.conf /opt/nginx/etc/sites-enabled/
 fi
