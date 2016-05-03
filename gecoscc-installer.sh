@@ -44,9 +44,13 @@ TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/ma
 # Download a template, replace vars and copy it to a defined destination
 # PARAMETERS: Destination full path, origin url 
 function install_template {
+    if [ ! -x /usr/bin/envsubst ]
+        then
+            yum install gettext
+    fi
     filename=$(basename "$1")
     curl "$TEMPLATES_URL/$2" > /tmp/$filename
-    if [ "$3" eq "-subst" ] 
+    if [ "$3" == "-subst" ] 
         then
             envsubst < /tmp/$filename > $1
         else
@@ -96,10 +100,11 @@ gpgcheck=0
 sslverify=1
 EOF
 
-# Installing mongodb package
+echo "Installing mongodb package"
 yum install mongodb-org
-# TODO Run mongodb service
+echo "Starting mongodb on boot"
 install_template "/etc/init.d/mongod" mongod -nosubst
+chkconfig mongod on
 ;;
 
 
@@ -130,7 +135,7 @@ install_template "/opt/gecoscc-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini -subst
 NGINX)
     echo "INSTALLING NGINX WEB SERVER"
 
-yum install pcre-devel openssl-devel
+yum install gcc pcre-devel openssl-devel
 cd /tmp/ 
 curl -L "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz" > /tmp/nginx-$NGINX_VERSION.tar.gz
 tar xzf /tmp/nginx-$NGINX_VERSION.tar.gz
@@ -138,7 +143,13 @@ cd /tmp/nginx-$NGINX_VERSION
 ./configure --prefix=/opt/nginx --conf-path=/opt/nginx/etc/nginx.conf --sbin-path=/opt/nginx/bin/nginx
 make && make install
 echo "Configuring NGINX to serve GECOS Control Center"
+mkdir /opt/nginx/etc/sites-available/
+mkdir /opt/nginx/etc/sites-enabled/
 install_template "/opt/nginx/sites-available/gecoscc.conf" nginx.conf -subst
+ln -s /opt/nginx/etc/sites-available/nginx.conf /opt/nginx/etc/sites-enabled/
+echo "Starting NGINX on boot"
+install_template "/etc/init.d/nginx" nginx -nosubst
+chkconfig nginx on
 ;;
 
 
