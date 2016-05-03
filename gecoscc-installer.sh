@@ -46,7 +46,7 @@ TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/ma
 function install_template {
     if [ ! -x /usr/bin/envsubst ]
         then
-            yum install gettext
+            yum install -y gettext
     fi
     filename=$(basename "$1")
     curl "$TEMPLATES_URL/$2" > /tmp/$filename
@@ -102,7 +102,7 @@ sslverify=1
 EOF
 
 echo "Installing mongodb package"
-yum install mongodb-org
+yum install -y mongodb-org
 echo "Starting mongodb on boot"
 install_template "/etc/init.d/mongod" mongod 755 -nosubst
 chkconfig mongod on
@@ -111,7 +111,10 @@ chkconfig mongod on
 
 CC)
     echo "INSTALLING GECOS CONTROL CENTER"
-
+echo "Adding EPEL repository"
+rpm -ivh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+echo "Installing pip"
+yum install -y python-pip
 echo "Creating Python virtual environment in /opt/gecosccui-$GECOSCC_VERSION"
 pip install virtualenv
 cd /opt/
@@ -136,7 +139,7 @@ install_template "/opt/gecoscc-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -su
 NGINX)
     echo "INSTALLING NGINX WEB SERVER"
 
-yum install gcc pcre-devel openssl-devel
+yum install -y gcc pcre-devel openssl-devel
 cd /tmp/ 
 curl -L "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz" > /tmp/nginx-$NGINX_VERSION.tar.gz
 tar xzf /tmp/nginx-$NGINX_VERSION.tar.gz
@@ -151,7 +154,9 @@ if [ ! -e /opt/nginx/etc/sites-enabled ]; then
     mkdir /opt/nginx/etc/sites-enabled/
 fi
 install_template "/opt/nginx/etc/sites-available/gecoscc.conf" nginx.conf 644 -subst
-ln -s /opt/nginx/etc/sites-available/gecoscc.conf /opt/nginx/etc/sites-enabled/
+if [ ! -e /opt/nginx/etc/sites-enabled/gecoscc.conf ]; then 
+    ln -s /opt/nginx/etc/sites-available/gecoscc.conf /opt/nginx/etc/sites-enabled/
+fi
 echo "Starting NGINX on boot"
 install_template "/etc/init.d/nginx" nginx 755 -nosubst
 chkconfig nginx on
