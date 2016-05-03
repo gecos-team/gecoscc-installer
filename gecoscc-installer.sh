@@ -28,6 +28,9 @@ export CHEF_ADMIN_KEYFILE='/tmp/admin.pem'
 export CHEF_ORGANIZATION_KEYFILE='/tmp/admin.pem'
 export CHEF_URL="https://localhost/"
 
+export SUPERVISOR_USER_NAME=internal
+export SUPERVISOR_PASSWORD=changeme
+
 export GECOSCC_VERSION='2.1.10'
 
 export NGINX_VERSION='1.4.3'
@@ -124,11 +127,11 @@ fi
 echo "Installing python-devel and pip"
 install_package python-devel 
 install_package python-pip
-echo "Creating Python virtual environment in /opt/gecosccui-$GECOSCC_VERSION"
+echo "Creating a Python Virtual Environment in /opt/gecosccui-$GECOSCC_VERSION"
 pip install virtualenv
 cd /opt/
 virtualenv gecosccui-$GECOSCC_VERSION
-echo "Activating virtualenv"
+echo "Activating Python Virtual Environment"
 cd /opt/gecosccui-$GECOSCC_VERSION
 export PS1="GECOS>" 
 source bin/activate
