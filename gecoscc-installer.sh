@@ -46,7 +46,7 @@ TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/ma
 function install_template {
     if [ ! -x /usr/bin/envsubst ]
         then
-            yum install -y gettext
+            install_package gettext
     fi
     filename=$(basename "$1")
     curl "$TEMPLATES_URL/$2" > /tmp/$filename
@@ -59,6 +59,12 @@ function install_template {
     chmod $3 $1
 }
 
+
+function install_package {
+    if ! rpm -q $1;then
+        yum install -y $1
+    fi
+}
 
 # START
 
@@ -102,7 +108,7 @@ sslverify=1
 EOF
 
 echo "Installing mongodb package"
-yum install -y mongodb-org
+install_package mongodb-org
 echo "Starting mongodb on boot"
 install_template "/etc/init.d/mongod" mongod 755 -nosubst
 chkconfig mongod on
@@ -112,9 +118,12 @@ chkconfig mongod on
 CC)
     echo "INSTALLING GECOS CONTROL CENTER"
 echo "Adding EPEL repository"
-rpm -ivh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+if ! rpm -q epel-release-6-8.noarch; then
+    rpm -ivh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+fi
 echo "Installing python-devel and pip"
-yum install -y python-devel python-pip
+install_package python-devel 
+install_package python-pip
 echo "Creating Python virtual environment in /opt/gecosccui-$GECOSCC_VERSION"
 pip install virtualenv
 cd /opt/
@@ -131,15 +140,18 @@ echo "Installing GECOS Control Center UI"
 pip install "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
 echo "Configuring supervisord start script"
 install_template "/etc/init.d/supervisord" supervisord 755 -subst
-install_template "/opt/gecoscc-$GECOSCC_VERSION/supervisord.conf" supervisord.conf 644 -subst
-install_template "/opt/gecoscc-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
+install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.conf 644 -subst
+install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
 ;;
 
 
 NGINX)
     echo "INSTALLING NGINX WEB SERVER"
 
-yum install -y gcc pcre-devel openssl-devel
+echo "Installing some development packages"
+install_package gcc
+install_package pcre-devel
+install_package openssl-devel
 cd /tmp/ 
 curl -L "http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz" > /tmp/nginx-$NGINX_VERSION.tar.gz
 tar xzf /tmp/nginx-$NGINX_VERSION.tar.gz
