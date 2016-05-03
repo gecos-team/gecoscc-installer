@@ -50,12 +50,13 @@ function install_template {
     fi
     filename=$(basename "$1")
     curl "$TEMPLATES_URL/$2" > /tmp/$filename
-    if [ "$3" == "-subst" ] 
+    if [ "$4" == "-subst" ] 
         then
             envsubst < /tmp/$filename > $1
         else
             cp /tmp/$filename $1
     fi
+    chmod $3 $1
 }
 
 
@@ -103,7 +104,7 @@ EOF
 echo "Installing mongodb package"
 yum install mongodb-org
 echo "Starting mongodb on boot"
-install_template "/etc/init.d/mongod" mongod -nosubst
+install_template "/etc/init.d/mongod" 755 mongod -nosubst
 chkconfig mongod on
 ;;
 
@@ -126,9 +127,9 @@ pip install supervisor
 echo "Installing GECOS Control Center UI"
 pip install "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
 echo "Configuring supervisord start script"
-install_template "/etc/init.d/supervisord" supervisord -subst
-install_template "/opt/gecoscc-$GECOSCC_VERSION/supervisor.conf" supervisor.conf -subst
-install_template "/opt/gecoscc-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini -subst
+install_template "/etc/init.d/supervisord" 755 supervisord -subst
+install_template "/opt/gecoscc-$GECOSCC_VERSION/supervisor.conf" 644 supervisor.conf -subst
+install_template "/opt/gecoscc-$GECOSCC_VERSION/gecoscc.ini" 644 gecoscc.ini -subst
 ;;
 
 
@@ -149,10 +150,10 @@ fi
 if [ ! -e /opt/nginx/etc/sites-enabled ]; then 
     mkdir /opt/nginx/etc/sites-enabled/
 fi
-install_template "/opt/nginx/etc/sites-available/gecoscc.conf" nginx.conf -subst
-ln -s /opt/nginx/etc/sites-available/nginx.conf /opt/nginx/etc/sites-enabled/
+install_template "/opt/nginx/etc/sites-available/gecoscc.conf" 644 nginx.conf 7-subst
+ln -s /opt/nginx/etc/sites-available/gecoscc.conf 644 /opt/nginx/etc/sites-enabled/
 echo "Starting NGINX on boot"
-install_template "/etc/init.d/nginx" nginx -nosubst
+install_template "/etc/init.d/nginx" nginx 755 -nosubst
 chkconfig nginx on
 ;;
 
