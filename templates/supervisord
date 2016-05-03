@@ -22,7 +22,7 @@
 
 # Service execution details
 
-EXECUTE="/opt/gecosccui-$GECOSCC_VERSION/bin/supervisord"
+EXECUTE="/opt/gecosccui-${GECOSCC_VERSION}/bin/supervisord"
 PROCESS="supervisord"
 PROGRAM="supervisord"
 TIMEOUT="5"

@@ -47,17 +47,21 @@ TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/ma
 # Download a template, replace vars and copy it to a defined destination
 # PARAMETERS: Destination full path, origin url, permissions, -subst/-nosubst for environment vars substitution
 function install_template {
-    if [ ! -x /usr/bin/envsubst ]
-        then
-            install_package gettext
-    fi
     filename=$(basename "$1")
-    curl "$TEMPLATES_URL/$2" > /tmp/$filename
+    curl "$TEMPLATES_URL/$2" > /tmp/$filename.tmp
     if [ "$4" == "-subst" ] 
         then
-            envsubst < /tmp/$filename > $1
+            rm $1
+            while read -r line ; do
+                while [[ "$line" =~ (\$\{[a-zA-Z_][a-zA-Z_0-9]*\}) ]] ; do
+                    LHS=${BASH_REMATCH[1]}
+                    RHS="$(eval echo "\"$LHS\"")"
+                    line=${line//$LHS/$RHS}
+                done
+                echo "$line" >> $1
+            done < /tmp/$filename.tmp
         else
-            cp /tmp/$filename $1
+            cp /tmp/$filename.tmp $1
     fi
     chmod $3 $1
 }
@@ -141,10 +145,12 @@ echo "Installing supervisor"
 pip install supervisor
 echo "Installing GECOS Control Center UI"
 pip install "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
+echo "Configuring GECOS Control Center"
+install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
 echo "Configuring supervisord start script"
 install_template "/etc/init.d/supervisord" supervisord 755 -subst
 install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.conf 644 -subst
-install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
+chkconfig supervisord on
 ;;
 
 
