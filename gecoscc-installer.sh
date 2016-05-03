@@ -145,7 +145,7 @@ make && make install
 echo "Configuring NGINX to serve GECOS Control Center"
 mkdir /opt/nginx/etc/sites-available/
 mkdir /opt/nginx/etc/sites-enabled/
-install_template "/opt/nginx/sites-available/gecoscc.conf" nginx.conf -subst
+install_template "/opt/nginx/etc/sites-available/gecoscc.conf" nginx.conf -subst
 ln -s /opt/nginx/etc/sites-available/nginx.conf /opt/nginx/etc/sites-enabled/
 echo "Starting NGINX on boot"
 install_template "/etc/init.d/nginx" nginx -nosubst
