@@ -61,8 +61,11 @@ OPTION=$(whiptail --title "GECOS CC Installation" --menu "Choose an option" 10 7
 
 
 case $OPTION in
+
+
 CHEF)
     echo "INSTALLING CHEF SERVER"
+
     echo "Downloading" $CHEF_SERVER_PACKAGE_URL
     curl -L "$CHEF_SERVER_PACKAGE_URL" > /tmp/chef-server.rpm
     echo "Installing"
@@ -73,8 +76,11 @@ CHEF)
 #    chef-server-ctl user-create "$CHEF_USER_NAME" "$CHEF_FIRST_NAME" "$CHEF_LAST_NAME" "$CHEF_EMAIL" "$CHEF_PASSWORD" --filename "$CHEF_ADMIN_KEYFILE"
 #    chef-server-ctl org-create short_name "$ORGANIZATION" --association_user "$CHEF_USER_NAME" --filename "$CHEF_ORGANIZATION_KEYFILE" 
 ;;
+
+
 MONGODB)
     echo "INSTALLING MONGODB SERVER"
+
 # Add mongodb repository
 cat > /etc/yum.repos.d/mongodb.repo <<EOF
 [mongodb]
@@ -88,9 +94,13 @@ EOF
 # Installing mongodb package
 yum install mongodb-org
 # TODO Run mongodb service
+install_template "/etc/init.d/mongod" mongod
 ;;
+
+
 CC)
     echo "INSTALLING GECOS CONTROL CENTER"
+
 echo "Creating Python virtual environment in /opt/gecosccui-$GECOSCC_VERSION"
 pip install virtualenv
 cd /opt/
@@ -112,7 +122,9 @@ install_template "/opt/gecoscc-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini
 
 #TODO: configure gecoscc template
 ;;
-CC)
+
+
+NGINX)
     echo "INSTALLING NGINX WEB SERVER"
 
 yum install pcre-devel openssl-devel
@@ -124,9 +136,12 @@ cd /tmp/nginx-$NGINX_VERSION
 make && make install
 echo "Configuring NGINX to serve GECOS Control Center"
 install_template "/opt/nginx/sites-available/gecoscc.conf" nginx.conf
-
 ;;
+
+
 POLICIES)
+    echo "Installing New Policies"
+
 cat > /tmp/knife.rb << EOF
 log_level                :info
 log_location             STDOUT
