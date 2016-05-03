@@ -113,8 +113,8 @@ CC)
     echo "INSTALLING GECOS CONTROL CENTER"
 echo "Adding EPEL repository"
 rpm -ivh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-echo "Installing pip"
-yum install -y python-pip
+echo "Installing python-devel and pip"
+yum install -y python-devel python-pip
 echo "Creating Python virtual environment in /opt/gecosccui-$GECOSCC_VERSION"
 pip install virtualenv
 cd /opt/
@@ -131,7 +131,7 @@ echo "Installing GECOS Control Center UI"
 pip install "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
 echo "Configuring supervisord start script"
 install_template "/etc/init.d/supervisord" supervisord 755 -subst
-install_template "/opt/gecoscc-$GECOSCC_VERSION/supervisor.conf" supervisor.conf 644 -subst
+install_template "/opt/gecoscc-$GECOSCC_VERSION/supervisord.conf" supervisord.conf 644 -subst
 install_template "/opt/gecoscc-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
 ;;
 
