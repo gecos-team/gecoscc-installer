@@ -16,16 +16,14 @@ set -u
 set -e
 
 export ORGANIZATION="Your Organization"
+export ADMIN_USER_NAME='admin'
+export ADMIN_EMAIL="gecos@guadalinex.org"
+export ADMIN_PASSWORD="gecos"
+export ADMIN_FIRST_NAME="Administrator"
+export ADMIN_LAST_NAME=""
 export SERVER_IP="127.0.0.1"
 
 export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.1.7-1.el6.x86_64.rpm"
-export CHEF_USER_NAME='admin'
-export CHEF_FIRST_NAME='Administrator'
-export CHEF_LAST_NAME=''
-export CHEF_EMAIL='gecos@guadalinex.org'
-export CHEF_PASSWORD='gecos'
-export CHEF_ADMIN_KEYFILE='/tmp/admin.pem'
-export CHEF_ORGANIZATION_KEYFILE='/tmp/admin.pem'
 export CHEF_URL="https://localhost/"
 
 export SUPERVISOR_USER_NAME=internal
@@ -75,13 +73,14 @@ function install_package {
     fi
 }
 
-# START
+# START: MAIN MENU
 
 OPTION=$(whiptail --title "GECOS CC Installation" --menu "Choose an option" 10 78 4 \
 "CHEF" "Install Chef server" \
 "MONGODB" "Install Mongo Database." \
 "NGINX" "Install NGINX Web Server." \
 "CC" "Install GECOS Control Center." \
+"USER" "Create Control Center Superuser." \
 "POLICIES" "Load New Policies." 3>&1 1>&2 2>&3 )
 
 
@@ -97,11 +96,8 @@ CHEF)
     rpm -Uvh /tmp/chef-server.rpm
     echo "Configuring"
     chef-server-ctl reconfigure
-#Changes for Chef12:
-#    chef-server-ctl user-create "$CHEF_USER_NAME" "$CHEF_FIRST_NAME" "$CHEF_LAST_NAME" "$CHEF_EMAIL" "$CHEF_PASSWORD" --filename "$CHEF_ADMIN_KEYFILE"
-#    chef-server-ctl org-create short_name "$ORGANIZATION" --association_user "$CHEF_USER_NAME" --filename "$CHEF_ORGANIZATION_KEYFILE" 
-     echo "Opening port in Firewall
-     lokkit -s https
+    echo "Opening port in Firewall
+    lokkit -s https
 ;;
 
 
@@ -175,7 +171,10 @@ then
     ./configure --prefix=/opt/nginx --conf-path=/opt/nginx/etc/nginx.conf --sbin-path=/opt/nginx/bin/nginx
     make && make install
 fi
+echo "Creating user nginx"
+adduser nginx
 echo "Configuring NGINX to serve GECOS Control Center"
+install_template "/opt/nginx/etc/nginx.conf" nginx.conf 644 -nosubst
 if [ ! -e /opt/nginx/etc/sites-available ]; then 
     mkdir /opt/nginx/etc/sites-available/
 fi
@@ -195,22 +194,40 @@ lokkit -s http
 
 
 POLICIES)
-    echo "Installing New Policies"
+    echo "INSTALLING NEW POLICIES"
 
-cat > /tmp/knife.rb << EOF
+echo "Uploading policies to CHEF"
+if [ -e /opt/chef-server/bin/chef-server-ctl ]; then
+    cat > /tmp/knife.rb << EOF
 log_level                :info
 log_location             STDOUT
-node_name                'admin'
+node_name                $ADMIN_USER_NAME
 client_key               '/etc/chef-server/admin.pem'
 validation_client_name   'chef-validator'
 validation_key           '/etc/chef-server/chef-validator.pem'
-chef_server_url          'https://localhost:443/'
+chef_server_url          $CHEF_SERVER_URL
 syntax_check_cache_path  '/root/.chef/syntax_check_cache'
 cookbook_path            '${LOCAL_CHEF_REPO}/cookbooks'
 EOF
-# upload all the cookbooks
-knife cookbook upload -c /tmp/knife.rb -a
+    knife cookbook upload -c /tmp/knife.rb -a
+fi
 
+if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
+    echo "Uploading policies to Control Center"
+    /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini import_policies -a $ADMIN_USER_NAME -k /etc/chef-server/admin.pem
+fi
+
+;;
+
+
+USER)
+    echo "CREATING CONTROL CENTER SUPERUSER"
+    if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
+        /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini create_chef_administrator -u $ADMIN_USER_NAME -e $ADMIN_EMAIL -a $ADMIN_USER_NAME -s -k /etc/chef-server/admin.pem -n
+        echo "User $ADMIN_USER_NAME created"
+    else
+        echo "Control Center is not installed in this machine"
+    fi
 ;;
 esac
 
