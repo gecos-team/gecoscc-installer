@@ -16,12 +16,13 @@ set -u
 set -e
 
 export ORGANIZATION="Your Organization"
-export ADMIN_USER_NAME='admin'
+export ADMIN_USER_NAME='superuser'
 export ADMIN_EMAIL="gecos@guadalinex.org"
-export ADMIN_PASSWORD="gecos"
-export ADMIN_FIRST_NAME="Administrator"
-export ADMIN_LAST_NAME=""
-export SERVER_IP="127.0.0.1"
+
+export GECOS_CC_SERVER_IP="127.0.0.1"
+export CHEF_SERVER_IP="127.0.0.1"
+
+export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
 export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.1.7-1.el6.x86_64.rpm"
 export CHEF_URL="https://localhost/"
@@ -30,10 +31,9 @@ export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
 export GECOSCC_VERSION='2.1.10'
+export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/master.zip"
 
 export NGINX_VERSION='1.4.3'
-
-export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
 export RUBY_GEMS_REPOSITORY_URL="http://rubygems.org"
 export HELP_URL="http://forja.guadalinex.org/webs/gecos/doc/v2/doku.php"
@@ -73,9 +73,21 @@ function install_package {
     fi
 }
 
+function fix_host_name {
+    IP=$(hostname -I)
+    echo $IP
+    if  ! grep $IP /etc/hosts; then
+        echo "#Added by GECOS Control Center Installer" >> /etc/hosts
+        echo "$IP       $HOSTNAME" >> /etc/hosts
+    fi
+
+
+
+}
+
 # START: MAIN MENU
 
-OPTION=$(whiptail --title "GECOS CC Installation" --menu "Choose an option" 10 78 4 \
+OPTION=$(whiptail --title "GECOS CC Installation" --menu "Choose an option" 12 78 6 \
 "CHEF" "Install Chef server" \
 "MONGODB" "Install Mongo Database." \
 "NGINX" "Install NGINX Web Server." \
@@ -86,18 +98,23 @@ OPTION=$(whiptail --title "GECOS CC Installation" --menu "Choose an option" 10 7
 
 case $OPTION in
 
-
+    
 CHEF)
     echo "INSTALLING CHEF SERVER"
-
+TO-DO: add server name to /etc/hosts (or chef-server-reconfigure will fail)
     echo "Downloading" $CHEF_SERVER_PACKAGE_URL
     curl -L "$CHEF_SERVER_PACKAGE_URL" > /tmp/chef-server.rpm
     echo "Installing"
     rpm -Uvh /tmp/chef-server.rpm
+    echo "Checking host name resolution"
+    fix_host_name
     echo "Configuring"
-    chef-server-ctl reconfigure
+    install_template "/etc/chef-server/chef-server.rb" chef-server.rb 644 -subst
+    /opt/chef-server/bin/chef-server-ctl reconfigure
     echo "Opening port in Firewall
     lokkit -s https
+    echo "CHEF SERVER INSTALLED"
+    echo "Please, visit https://$CHEF_SERVER_IP and change default admin password"
 ;;
 
 
@@ -152,6 +169,7 @@ echo "Configuring supervisord start script"
 install_template "/etc/init.d/supervisord" supervisord 755 -subst
 install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.conf 644 -subst
 chkconfig supervisord on
+
 ;;
 
 
@@ -198,16 +216,21 @@ POLICIES)
 
 echo "Uploading policies to CHEF"
 if [ -e /opt/chef-server/bin/chef-server-ctl ]; then
+    curl $GECOSCC_POLICIES_URL > /tmp/policies.zip
+    mkdir /tmp/policies
+    cd /tmp/policies
+    unzip /tmp/policies.zip
+
     cat > /tmp/knife.rb << EOF
 log_level                :info
 log_location             STDOUT
-node_name                $ADMIN_USER_NAME
+node_name                '$ADMIN_USER_NAME'
 client_key               '/etc/chef-server/admin.pem'
 validation_client_name   'chef-validator'
 validation_key           '/etc/chef-server/chef-validator.pem'
 chef_server_url          $CHEF_SERVER_URL
 syntax_check_cache_path  '/root/.chef/syntax_check_cache'
-cookbook_path            '${LOCAL_CHEF_REPO}/cookbooks'
+cookbook_path            '/tmp/policies/cookbooks'
 EOF
     knife cookbook upload -c /tmp/knife.rb -a
 fi
@@ -223,7 +246,7 @@ fi
 USER)
     echo "CREATING CONTROL CENTER SUPERUSER"
     if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
-        /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini create_chef_administrator -u $ADMIN_USER_NAME -e $ADMIN_EMAIL -a $ADMIN_USER_NAME -s -k /etc/chef-server/admin.pem -n
+        /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini create_chef_administrator -u $ADMIN_USER_NAME -e $ADMIN_EMAIL -a admin -s -k /etc/chef-server/admin.pem -n
         echo "User $ADMIN_USER_NAME created"
     else
         echo "Control Center is not installed in this machine"
