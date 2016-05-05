@@ -24,7 +24,8 @@ export CHEF_SERVER_IP="127.0.0.1"
 
 export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
-export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.1.7-1.el6.x86_64.rpm"
+export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.0.12-1.el6.x86_64.rpm"
+#export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.1.7-1.el6.x86_64.rpm"
 export CHEF_SERVER_URL="https://localhost/"
 
 export SUPERVISOR_USER_NAME=internal
@@ -81,6 +82,15 @@ function fix_host_name {
         echo "$IP       $HOSTNAME" >> /etc/hosts
     fi
 }
+
+function download_cookbook {
+    echo "Downloading $1-$2"
+    curl -L https://supermarket.chef.io/cookbooks/$1/versions/$2/download > /tmp/$1.tgz
+    cd /tmp/cookbooks/  
+    tar xzf /tmp/$1.tgz
+}
+
+
 
 # START: MAIN MENU
 
@@ -222,28 +232,39 @@ echo "Installing required unzip package"
 install_package unzip
 echo "Uploading policies to CHEF"
 if [ -e /opt/chef-server/bin/chef-server-ctl ]; then
-    curl $GECOSCC_POLICIES_URL > /tmp/policies.zip
-    mkdir -p /tmp/policies
-    cd /tmp/policies
-    unzip /tmp/policies.zip
+    echo "Downloading GECOS policies"
+    curl -L $GECOSCC_POLICIES_URL > /tmp/policies.zip
+    rm -rf /tmp/cookbooks
+    mkdir -p /tmp/cookbooks
+    cd /tmp/cookbooks
+    unzip -o /tmp/policies.zip
+    mv /tmp/cookbooks/gecos-workstation-management-cookbook-master /tmp/cookbooks/gecos_ws_mgmt
+
+    echo "Downloading dependent cookbooks"
+    download_cookbook chef-client 4.3.1
+    download_cookbook apt 2.8.2
+    download_cookbook windows 1.38.2
+    download_cookbook chef_handler 1.2.0
+    download_cookbook logrotate 1.9.2
+    download_cookbook cron 1.7.0
 
     cat > /tmp/knife.rb << EOF
 log_level                :info
 log_location             STDOUT
-node_name                '$ADMIN_USER_NAME'
+node_name                'admin'
 client_key               '/etc/chef-server/admin.pem'
 validation_client_name   'chef-validator'
 validation_key           '/etc/chef-server/chef-validator.pem'
-chef_server_url          $CHEF_SERVER_URL
+chef_server_url          '$CHEF_SERVER_URL'
 syntax_check_cache_path  '/root/.chef/syntax_check_cache'
-cookbook_path            '/tmp/policies/cookbooks'
+cookbook_path            '/tmp/policies/'
 EOF
-    knife cookbook upload -c /tmp/knife.rb -a
+    /opt/chef-server/embedded/bin/knife cookbook upload -c /tmp/knife.rb -a
 fi
 
 if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
     echo "Uploading policies to Control Center"
-    /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini import_policies -a $ADMIN_USER_NAME -k /etc/chef-server/admin.pem
+    /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini import_policies -a admin -k /etc/chef-server/admin.pem
 fi
 
 ;;
