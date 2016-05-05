@@ -25,7 +25,7 @@ export CHEF_SERVER_IP="127.0.0.1"
 export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
 export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.1.7-1.el6.x86_64.rpm"
-export CHEF_URL="https://localhost/"
+export CHEF_SERVER_URL="https://localhost/"
 
 export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
@@ -129,9 +129,11 @@ EOF
 
 echo "Installing mongodb package"
 install_package mongodb-org
-echo "Starting mongodb on boot"
+echo "Configuring mongod start script"
 install_template "/etc/init.d/mongod" mongod 755 -nosubst
 chkconfig mongod on
+echo "Starting mongod"
+service mongod start
 echo "MONGODB INSTALLED"
 ;;
 
@@ -216,10 +218,12 @@ echo "NGINX SERVER INSTALLED"
 POLICIES)
     echo "INSTALLING NEW POLICIES"
 
+echo "Installing required unzip package"
+install_package unzip
 echo "Uploading policies to CHEF"
 if [ -e /opt/chef-server/bin/chef-server-ctl ]; then
     curl $GECOSCC_POLICIES_URL > /tmp/policies.zip
-    mkdir /tmp/policies
+    mkdir -p /tmp/policies
     cd /tmp/policies
     unzip /tmp/policies.zip
 
