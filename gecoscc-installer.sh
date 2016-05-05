@@ -101,7 +101,6 @@ case $OPTION in
     
 CHEF)
     echo "INSTALLING CHEF SERVER"
-TO-DO: add server name to /etc/hosts (or chef-server-reconfigure will fail)
     echo "Downloading" $CHEF_SERVER_PACKAGE_URL
     curl -L "$CHEF_SERVER_PACKAGE_URL" > /tmp/chef-server.rpm
     echo "Installing"
