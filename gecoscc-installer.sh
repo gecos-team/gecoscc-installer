@@ -80,9 +80,6 @@ function fix_host_name {
         echo "#Added by GECOS Control Center Installer" >> /etc/hosts
         echo "$IP       $HOSTNAME" >> /etc/hosts
     fi
-
-
-
 }
 
 # START: MAIN MENU
@@ -101,16 +98,16 @@ case $OPTION in
     
 CHEF)
     echo "INSTALLING CHEF SERVER"
-    echo "Downloading" $CHEF_SERVER_PACKAGE_URL
+    echo "Downloading package $CHEF_SERVER_PACKAGE_URL"
     curl -L "$CHEF_SERVER_PACKAGE_URL" > /tmp/chef-server.rpm
-    echo "Installing"
+    echo "Installing package"
     rpm -Uvh /tmp/chef-server.rpm
     echo "Checking host name resolution"
     fix_host_name
     echo "Configuring"
     install_template "/etc/chef-server/chef-server.rb" chef-server.rb 644 -subst
     /opt/chef-server/bin/chef-server-ctl reconfigure
-    echo "Opening port in Firewall
+    echo "Opening port in Firewall"
     lokkit -s https
     echo "CHEF SERVER INSTALLED"
     echo "Please, visit https://$CHEF_SERVER_IP and change default admin password"
@@ -135,6 +132,7 @@ install_package mongodb-org
 echo "Starting mongodb on boot"
 install_template "/etc/init.d/mongod" mongod 755 -nosubst
 chkconfig mongod on
+echo "MONGODB INSTALLED"
 ;;
 
 
@@ -164,11 +162,13 @@ echo "Installing GECOS Control Center UI"
 pip install "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
 echo "Configuring GECOS Control Center"
 install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
-echo "Configuring supervisord start script"
+echo "Configuring supervisord"
 install_template "/etc/init.d/supervisord" supervisord 755 -subst
 install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.conf 644 -subst
+mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
+mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/log
 chkconfig supervisord on
-
+echo "GECOS CONTROL CENTER INSTALLED"
 ;;
 
 
@@ -205,8 +205,11 @@ fi
 echo "Starting NGINX on boot"
 install_template "/etc/init.d/nginx" nginx 755 -nosubst
 chkconfig nginx on
-echo "Opening port in Firewall
+echo "Opening port in Firewall"
 lokkit -s http
+echo "Starting nginx"
+service nginx start
+echo "NGINX SERVER INSTALLED"
 ;;
 
 
