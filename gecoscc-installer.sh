@@ -34,6 +34,7 @@ export SUPERVISOR_PASSWORD=changeme
 
 export GECOSCC_VERSION='2.1.10'
 export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/master.zip"
+export GECOSCC_OHAI_URL="https://github.com/gecos-team/cookbook-ohai-gecos/archive/master.zip"
 
 export NGINX_VERSION='1.4.3'
 
@@ -90,20 +91,20 @@ function download_cookbook {
     cd /tmp/cookbooks/  
     tar xzf /tmp/$1.tgz
 }
-
+mr3q4cre
 
 
 # START: MAIN MENU
 
-OPTION=$(whiptail --title "GECOS CC Installation" --menu "Choose an option" 14 78 8 \
+OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "Choose an option" 14 78 8 \
 "CHEF" "Install Chef server" \
 "MONGODB" "Install Mongo Database." \
 "NGINX" "Install NGINX Web Server." \
 "CC" "Install GECOS Control Center." \
 "USER" "Create Control Center Superuser." \
-"POLICIES" "Load New Policies." \
-"PRINTERS" "Load Printers Models Catalog" \
-"PACKAGES" "Load Software Packages Catalog" 3>&1 1>&2 2>&3 )
+"POLICIES" "Update Control Center Policies." \
+"PRINTERS" "Update Printers Models Catalog" \
+"PACKAGES" "Update Software Packages Catalog" 3>&1 1>&2 2>&3 )
 
 
 case $OPTION in
@@ -238,24 +239,26 @@ install_package unzip
 echo "Installing chef client package"
 yum localinstall $CHEF_CLIENT_PACKAGE_URL
 echo "Uploading policies to CHEF"
-if [ -e /opt/chef-server/bin/chef-server-ctl ]; then
-    echo "Downloading GECOS policies"
-    curl -L $GECOSCC_POLICIES_URL > /tmp/policies.zip
-    rm -rf /tmp/cookbooks
-    mkdir -p /tmp/cookbooks
-    cd /tmp/cookbooks
-    unzip -o /tmp/policies.zip
-    mv /tmp/cookbooks/gecos-workstation-management-cookbook-master /tmp/cookbooks/gecos_ws_mgmt
+echo "Downloading GECOS policies"
+curl -L $GECOSCC_POLICIES_URL > /tmp/policies.zip
+curl -L $GECOSCC_OHAI_URL > /tmp/ohai.zip
+rm -rf /tmp/cookbooks
+mkdir -p /tmp/cookbooks
+cd /tmp/cookbooks
+unzip -o /tmp/policies.zip
+mv /tmp/cookbooks/gecos-workstation-management-cookbook-master /tmp/cookbooks/gecos_ws_mgmt
+unzip -o /tmp/ohai.zip
+mv /tmp/cookbooks/cookbook-ohai-gecos-master /tmp/cookbooks/ohai-gecos
 
-    echo "Downloading dependent cookbooks"
-    download_cookbook chef-client 4.3.1
-    download_cookbook apt 2.8.2
-    download_cookbook windows 1.38.2
-    download_cookbook chef_handler 1.2.0
-    download_cookbook logrotate 1.9.2
-    download_cookbook cron 1.7.0
+echo "Downloading dependent cookbooks"
+download_cookbook chef-client 4.3.1
+download_cookbook apt 2.8.2
+download_cookbook windows 1.38.2
+download_cookbook chef_handler 1.2.0
+download_cookbook logrotate 1.9.2
+download_cookbook cron 1.7.0
 
-    cat > /tmp/knife.rb << EOF
+cat > /tmp/knife.rb << EOF
 log_level                :info
 log_location             STDOUT
 node_name                'admin'
@@ -267,8 +270,8 @@ syntax_check_cache_path  '/root/.chef/syntax_check_cache'
 cookbook_path            '/tmp/cookbooks/'
 EOF
 # Using chef client knife instead of chef server embedded one. This one shows an json deep nesting error with our cookbook.
-    /usr/bin/knife cookbook upload -c /tmp/knife.rb -a
-fi
+/usr/bin/knife cookbook upload -c /tmp/knife.rb -a
+
 
 if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
     echo "Uploading policies to Control Center"
