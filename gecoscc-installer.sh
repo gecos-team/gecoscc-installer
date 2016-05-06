@@ -25,6 +25,7 @@ export CHEF_SERVER_IP="127.0.0.1"
 export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
 export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.0.12-1.el6.x86_64.rpm"
+export CHEF_CLIENT_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-11.18.12-1.el6.x86_64.rpm"
 #export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.1.7-1.el6.x86_64.rpm"
 export CHEF_SERVER_URL="https://localhost/"
 
@@ -94,13 +95,15 @@ function download_cookbook {
 
 # START: MAIN MENU
 
-OPTION=$(whiptail --title "GECOS CC Installation" --menu "Choose an option" 12 78 6 \
+OPTION=$(whiptail --title "GECOS CC Installation" --menu "Choose an option" 14 78 8 \
 "CHEF" "Install Chef server" \
 "MONGODB" "Install Mongo Database." \
 "NGINX" "Install NGINX Web Server." \
 "CC" "Install GECOS Control Center." \
 "USER" "Create Control Center Superuser." \
-"POLICIES" "Load New Policies." 3>&1 1>&2 2>&3 )
+"POLICIES" "Load New Policies." \
+"PRINTERS" "Load Printers Models Catalog" \
+"PACKAGES" "Load Software Packages Catalog" 3>&1 1>&2 2>&3 )
 
 
 case $OPTION in
@@ -115,6 +118,7 @@ CHEF)
     echo "Checking host name resolution"
     fix_host_name
     echo "Configuring"
+    mkdir -p /etc/chef-server/
     install_template "/etc/chef-server/chef-server.rb" chef-server.rb 644 -subst
     /opt/chef-server/bin/chef-server-ctl reconfigure
     echo "Opening port in Firewall"
@@ -142,8 +146,9 @@ install_package mongodb-org
 echo "Configuring mongod start script"
 install_template "/etc/init.d/mongod" mongod 755 -nosubst
 chkconfig mongod on
-echo "Starting mongod"
-service mongod start
+# Current mongodb package has got an error in start script. Disabling next lines until it is solved
+#echo "Starting mongod"
+#service mongod start
 echo "MONGODB INSTALLED"
 ;;
 
@@ -230,6 +235,8 @@ POLICIES)
 
 echo "Installing required unzip package"
 install_package unzip
+echo "Installing chef client package"
+yum localinstall $CHEF_CLIENT_PACKAGE_URL
 echo "Uploading policies to CHEF"
 if [ -e /opt/chef-server/bin/chef-server-ctl ]; then
     echo "Downloading GECOS policies"
@@ -257,9 +264,10 @@ validation_client_name   'chef-validator'
 validation_key           '/etc/chef-server/chef-validator.pem'
 chef_server_url          '$CHEF_SERVER_URL'
 syntax_check_cache_path  '/root/.chef/syntax_check_cache'
-cookbook_path            '/tmp/policies/'
+cookbook_path            '/tmp/cookbooks/'
 EOF
-    /opt/chef-server/embedded/bin/knife cookbook upload -c /tmp/knife.rb -a
+# Using chef client knife instead of chef server embedded one. This one shows an json deep nesting error with our cookbook.
+    /usr/bin/knife cookbook upload -c /tmp/knife.rb -a
 fi
 
 if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
@@ -274,10 +282,22 @@ USER)
     echo "CREATING CONTROL CENTER SUPERUSER"
     if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
         /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini create_chef_administrator -u $ADMIN_USER_NAME -e $ADMIN_EMAIL -a admin -s -k /etc/chef-server/admin.pem -n
-        echo "User $ADMIN_USER_NAME created"
+        echo "Please, remember the GCC password. You will need it to login into Control Center"
+
     else
         echo "Control Center is not installed in this machine"
     fi
 ;;
+
+PRINTERS)
+    echo "LOADING PRINTERS CATALOG"
+    /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini update_printers
+;;
+PACKAGES)
+    echo "LOADING PRINTERS CATALOG"
+    /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini synchronize_repositories
+;;
 esac
+
+
 
