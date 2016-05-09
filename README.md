@@ -2,6 +2,7 @@
 
 Script and configuration templates to install a GECOS Control Center
 
+![Installer Screenshot](https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/gecoscc-installer-01.png)
 
 ## Instructions
 
