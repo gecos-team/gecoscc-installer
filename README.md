@@ -27,7 +27,7 @@ Script and configuration templates to install a GECOS Control Center
 
 Now you can log into your brand new Control Center using your web browser.
 
-If you can see the web interface, follow these steps to finish the configuration:
+If you can see the web interface, log into your server, run the installer again, and follow these steps to finish the configuration:
 
 * Select POLICIES to download and install last version of workstation policies.
 
