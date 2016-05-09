@@ -11,10 +11,10 @@ Script and configuration templates to install a GECOS Control Center
 
 * Download the installer from http://bit.ly/gecoscc-installer:         
 
-  curl -L http://bit.ly/gecoscc-installer > gecoscc-installer 
+`curl -L http://bit.ly/gecoscc-installer > gecoscc-installer `
 
 * Edit the installer and change the ORGANIZATION_NAME, ADMIN_USER_NAME and ADMIN_EMAIL
 
-* Run the installer
-
-  bash gecoscc-installer
+* Run the installer:
+  
+`bash gecoscc-installer`
