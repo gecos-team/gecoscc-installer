@@ -91,7 +91,7 @@ function download_cookbook {
     cd /tmp/cookbooks/  
     tar xzf /tmp/$1.tgz
 }
-mr3q4cre
+
 
 
 # START: MAIN MENU
