@@ -22,9 +22,9 @@ Script and configuration templates to install a GECOS Control Center
 
 * Select proper menu items in order to install every component: CHEF, MONGODB, NGINX and CONTROL CENTER 
 
-* Select USER to create your first superuser (You can create more users from the web interface). Do not forget to write down your password!
-
 * Reboot the server. 
+
+* Select USER to create your first superuser (You can create more users from the web interface). Do not forget to write down your password!
 
 Now you can log into your brand new Control Center using your web browser.
 
