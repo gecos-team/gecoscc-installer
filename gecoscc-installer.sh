@@ -177,7 +177,7 @@ pip install "https://pypi.python.org/packages/source/g/gevent/gevent-1.0.tar.gz"
 echo "Installing supervisor"
 pip install supervisor
 echo "Installing GECOS Control Center UI"
-pip install "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
+pip install --upgrade --no-deps --force-reinstall "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
 echo "Configuring GECOS Control Center"
 install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
 echo "Configuring supervisord"
