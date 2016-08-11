@@ -246,9 +246,9 @@ rm -rf /tmp/cookbooks
 mkdir -p /tmp/cookbooks
 cd /tmp/cookbooks
 unzip -o /tmp/policies.zip
-mv /tmp/cookbooks/gecos-workstation-management-cookbook-master /tmp/cookbooks/gecos_ws_mgmt
+mv /tmp/cookbooks/gecos-workstation-management-cookbook-* /tmp/cookbooks/gecos_ws_mgmt
 unzip -o /tmp/ohai.zip
-mv /tmp/cookbooks/cookbook-ohai-gecos-master /tmp/cookbooks/ohai-gecos
+mv /tmp/cookbooks/cookbook-ohai-gecos-* /tmp/cookbooks/ohai-gecos
 
 echo "Downloading dependent cookbooks"
 download_cookbook chef-client 4.3.1
