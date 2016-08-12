@@ -297,7 +297,7 @@ PRINTERS)
     /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini update_printers
 ;;
 PACKAGES)
-    echo "LOADING PRINTERS CATALOG"
+    echo "LOADING PACKAGES CATALOG"
     /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini synchronize_repositories
 ;;
 esac
