@@ -34,7 +34,7 @@ export SUPERVISOR_PASSWORD=changeme
 
 export GECOSCC_VERSION='2.1.10'
 export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/master.zip"
-export GECOSCC_OHAI_URL="https://github.com/gecos-team/cookbook-ohai-gecos/archive/master.zip"
+export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/development.zip"
 
 export NGINX_VERSION='1.4.3'
 
@@ -177,7 +177,8 @@ pip install "https://pypi.python.org/packages/source/g/gevent/gevent-1.0.tar.gz"
 echo "Installing supervisor"
 pip install supervisor
 echo "Installing GECOS Control Center UI"
-pip install --upgrade --no-deps --force-reinstall "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
+# Add --no-deps to speed up gecos-cc reinstallations and dependencies are already satisfied
+pip install --upgrade --force-reinstall "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
 echo "Configuring GECOS Control Center"
 install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
 echo "Configuring supervisord"
@@ -248,7 +249,7 @@ cd /tmp/cookbooks
 unzip -o /tmp/policies.zip
 mv /tmp/cookbooks/gecos-workstation-management-cookbook-* /tmp/cookbooks/gecos_ws_mgmt
 unzip -o /tmp/ohai.zip
-mv /tmp/cookbooks/cookbook-ohai-gecos-* /tmp/cookbooks/ohai-gecos
+mv /tmp/cookbooks/gecos-workstation-ohai-cookbook-* /tmp/cookbooks/ohai-gecos
 
 echo "Downloading dependent cookbooks"
 download_cookbook chef-client 4.3.1
