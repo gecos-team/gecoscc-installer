@@ -156,7 +156,28 @@ echo "MONGODB INSTALLED"
 
 CC)
     echo "INSTALLING GECOS CONTROL CENTER"
-#TO-DO: Stop supervisord before reinstalling (python file could be locked)
+
+if pgrep supervisord > /dev/null 2>&1
+  then
+
+OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "A Control Center is already running. Should I stop it?" 14 78 6 \
+"YES" "Stop current GECOS Control Center before reinstalling" \
+"NO" "Return to main menu" 3>&1 1>&2 2>&3 )
+
+  case $OPTION in
+    
+YES)
+    echo "Stopping GECOS Control Center"
+    /etc/init.d/supervisord stop
+;;
+NO)
+# Rerun this installer
+    exec "$0"
+;;
+  esac
+fi
+
+
 echo "Adding EPEL repository"
 if ! rpm -q epel-release-6-8.noarch; then
     rpm -ivh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
