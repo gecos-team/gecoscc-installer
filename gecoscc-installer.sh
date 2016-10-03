@@ -208,6 +208,7 @@ install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/log
 chkconfig supervisord on
+install_package redis
 echo "GECOS CONTROL CENTER INSTALLED"
 ;;
 
