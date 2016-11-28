@@ -29,9 +29,9 @@ TIMEOUT="5"
 
 [ -e /etc/sysconfig/$PROGRAM ] && . /etc/sysconfig/$PROGRAM
 
-PID_FILE=/opt/${GECOSCC_VERSION}/supervisor/run/supervisord.pid
-LCK_FILE=/opt/${GECOSCC_VERSION}/supervisor/run/supervisord.lock
-LOG_FILE=/opt/${GECOSCC_VERSION}/supervisor/log/supervisord.log
+PID_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/run/supervisord.pid
+LCK_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/run/supervisord.lock
+LOG_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/log/supervisord.log
 RUN_USER=${RUNUSER-root}
 
 RETVAL=0
