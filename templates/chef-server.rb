@@ -1,3 +1,6 @@
+default_orgname "default"
+addons['install'] = false
+
 nginx['url'] = "https://${CHEF_SERVER_IP}"
 nginx['enable'] = true
 nginx['non_ssl_port'] = false

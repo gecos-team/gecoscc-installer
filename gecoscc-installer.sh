@@ -21,27 +21,40 @@ export ADMIN_EMAIL="gecos@guadalinex.org"
 
 export GECOS_CC_SERVER_IP="127.0.0.1"
 export CHEF_SERVER_IP="127.0.0.1"
+# Test values
+export GECOS_CC_SERVER_IP="192.168.0.15"
+export CHEF_SERVER_IP="192.168.0.15"
+
+
 
 export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
-export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.0.12-1.el6.x86_64.rpm"
-export CHEF_CLIENT_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-11.18.12-1.el6.x86_64.rpm"
-#export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-11.1.7-1.el6.x86_64.rpm"
+export CHEF_SERVER_VERSION="12.6.0"
+export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-core-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
+export CHEF_CLIENT_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
 export CHEF_SERVER_URL="https://localhost/"
+export CHEF_SUPERADMIN_USER=pivotal
+export CHEF_SUPERADMIN_CERTIFICATE=/etc/opscode/pivotal.pem
+
+
 
 export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
-export GECOSCC_VERSION='2.1.10'
-export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/master.zip"
-export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/development.zip"
+# WARNING: I set my own repositories for testing purposses!
+export GECOSCC_VERSION='chef12_test'
+export GECOSCC_POLICIES_URL="https://github.com/System25/gecos-workstation-management-cookbook/archive/gecosv3.zip"
+export GECOSCC_OHAI_URL="https://github.com/System25/gecos-workstation-ohai-cookbook/archive/development.zip"
+export GECOSCC_URL="https://github.com/System25/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
+
+#TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/templates/"
+TEMPLATES_URL="https://raw.githubusercontent.com/System25/gecoscc-installer/chef_12/templates/"
+
 
 export NGINX_VERSION='1.4.3'
 
-export RUBY_GEMS_REPOSITORY_URL="http://rubygems.org"
+export RUBY_GEMS_REPOSITORY_URL="https://rubygems.org"
 export HELP_URL="http://forja.guadalinex.org/webs/gecos/doc/v2/doku.php"
-
-TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/templates/"
 
 # FUNCTIONS
 
@@ -102,6 +115,7 @@ OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "Choose an 
 "NGINX" "Install NGINX Web Server." \
 "CC" "Install GECOS Control Center." \
 "USER" "Create Control Center Superuser." \
+"SET_SUPERUSER" "Set Control Center Superuser as Chef Superuser." \
 "POLICIES" "Update Control Center Policies." \
 "PRINTERS" "Update Printers Models Catalog" \
 "PACKAGES" "Update Software Packages Catalog" 3>&1 1>&2 2>&3 )
@@ -119,13 +133,14 @@ CHEF)
     echo "Checking host name resolution"
     fix_host_name
     echo "Configuring"
-    mkdir -p /etc/chef-server/
-    install_template "/etc/chef-server/chef-server.rb" chef-server.rb 644 -subst
-    /opt/chef-server/bin/chef-server-ctl reconfigure
+    mkdir -p /etc/opscode/
+    install_template "/etc/opscode/chef-server.rb" chef-server.rb 644 -subst
+    /opt/opscode/bin/chef-server-ctl reconfigure
+    # Create the "default" organization
+    /opt/opscode/bin/chef-server-ctl org-create default default
     echo "Opening port in Firewall"
     lokkit -s https
     echo "CHEF SERVER INSTALLED"
-    echo "Please, visit https://$CHEF_SERVER_IP and change default admin password"
 ;;
 
 
@@ -199,7 +214,7 @@ echo "Installing supervisor"
 pip install supervisor
 echo "Installing GECOS Control Center UI"
 # Add --no-deps to speed up gecos-cc reinstallations and dependencies are already satisfied
-pip install --upgrade --force-reinstall "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
+pip install --upgrade --force-reinstall $GECOSCC_URL
 echo "Configuring GECOS Control Center"
 install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
 echo "Configuring supervisord"
@@ -260,7 +275,7 @@ POLICIES)
 echo "Installing required unzip package"
 install_package unzip
 echo "Installing chef client package"
-yum localinstall $CHEF_CLIENT_PACKAGE_URL
+yum localinstall $CHEF_CLIENT_PACKAGE_URL -y
 echo "Uploading policies to CHEF"
 echo "Downloading GECOS policies"
 curl -L $GECOSCC_POLICIES_URL > /tmp/policies.zip
@@ -284,21 +299,20 @@ download_cookbook cron 1.7.0
 cat > /tmp/knife.rb << EOF
 log_level                :info
 log_location             STDOUT
-node_name                'admin'
-client_key               '/etc/chef-server/admin.pem'
-validation_client_name   'chef-validator'
-validation_key           '/etc/chef-server/chef-validator.pem'
+node_name                '$CHEF_SUPERADMIN_USER'
+client_key               '$CHEF_SUPERADMIN_CERTIFICATE'
 chef_server_url          '$CHEF_SERVER_URL'
 syntax_check_cache_path  '/root/.chef/syntax_check_cache'
 cookbook_path            '/tmp/cookbooks/'
 EOF
 # Using chef client knife instead of chef server embedded one. This one shows an json deep nesting error with our cookbook.
+/usr/bin/knife ssl fetch -c /tmp/knife.rb
 /usr/bin/knife cookbook upload -c /tmp/knife.rb -a
 
 
 if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
     echo "Uploading policies to Control Center"
-    /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini import_policies -a admin -k /etc/chef-server/admin.pem
+    /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini import_policies -a $CHEF_SUPERADMIN_USER -k $CHEF_SUPERADMIN_CERTIFICATE
 fi
 
 ;;
@@ -307,13 +321,25 @@ fi
 USER)
     echo "CREATING CONTROL CENTER SUPERUSER"
     if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
-        /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini create_chef_administrator -u $ADMIN_USER_NAME -e $ADMIN_EMAIL -a admin -s -k /etc/chef-server/admin.pem -n
+        /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini create_chef_administrator -u $ADMIN_USER_NAME -e $ADMIN_EMAIL -a $CHEF_SUPERADMIN_USER -s -k $CHEF_SUPERADMIN_CERTIFICATE -n
         echo "Please, remember the GCC password. You will need it to login into Control Center"
 
     else
         echo "Control Center is not installed in this machine"
     fi
 ;;
+
+SET_SUPERUSER)
+    echo "SETTING THE CONTROL CENTER SUPERUSER AS A CHEF SUPERUSER"
+    if [ -e /opt/opscode/bin/chef-server-ctl ]; then
+        /opt/opscode/bin/chef-server-ctl grant-server-admin-permissions $ADMIN_USER_NAME
+        echo "Now $ADMIN_USER_NAME can manage Chef users"
+
+    else
+        echo "Chef 12 server is not installed in this machine"
+    fi
+;;
+
 
 PRINTERS)
     echo "LOADING PRINTERS CATALOG"
