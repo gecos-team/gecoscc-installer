@@ -48,7 +48,7 @@ export GECOSCC_OHAI_URL="https://github.com/System25/gecos-workstation-ohai-cook
 export GECOSCC_URL="https://github.com/System25/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
 
 #TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/templates/"
-TEMPLATES_URL="https://raw.githubusercontent.com/System25/gecoscc-installer/chef_12/templates/""
+TEMPLATES_URL="https://raw.githubusercontent.com/System25/gecoscc-installer/chef_12/templates/"
 
 
 export NGINX_VERSION='1.4.3'
