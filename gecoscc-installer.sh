@@ -14,9 +14,10 @@
 
 set -u
 set -e
+set +o nounset
 
 export ORGANIZATION="Your Organization"
-export ADMIN_USER_NAME='superuser'
+export ADMIN_USER_NAME="superuser"
 export ADMIN_EMAIL="gecos@guadalinex.org"
 
 export GECOS_CC_SERVER_IP="127.0.0.1"
@@ -77,12 +78,12 @@ function install_package {
 }
 
 function fix_host_name {
-    IP=$(hostname -I)
-    echo $IP
-    if  ! grep $IP /etc/hosts; then
-        echo "#Added by GECOS Control Center Installer" >> /etc/hosts
-        echo "$IP       $HOSTNAME" >> /etc/hosts
-    fi
+    echo "#Added by GECOS Control Center Installer" >> /etc/hosts
+    for IP in `hostname -I` ; do
+        if [ `grep -c $IP /etc/hosts` = "0" ] ; then
+            echo -e "$IP\t$HOSTNAME" >> /etc/hosts
+        fi
+    done
 }
 
 function download_cookbook {
@@ -115,7 +116,7 @@ CHEF)
     echo "Downloading package $CHEF_SERVER_PACKAGE_URL"
     curl -L "$CHEF_SERVER_PACKAGE_URL" > /tmp/chef-server.rpm
     echo "Installing package"
-    rpm -Uvh /tmp/chef-server.rpm
+    rpm -Uvh --nosignature /tmp/chef-server.rpm
     echo "Checking host name resolution"
     fix_host_name
     echo "Configuring"
@@ -177,38 +178,44 @@ NO)
   esac
 fi
 
-
-echo "Adding EPEL repository"
+#echo "Adding EPEL repository"
 if ! rpm -q epel-release-6-8.noarch; then
-    rpm -ivh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+#if ! rpm -q epel-release-7-9.noarch; then
+    rpm -ivh --nosignature http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+    #rpm -ivh --nosignature https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-9.noarch.rpm
 fi
-echo "Installing python-devel and pip"
-install_package python-devel 
-install_package python-pip
+echo "Installing python2.7"
+yum install -y centos-release-SCL
+yum install -y python27
+source /opt/rh/python27/enable
 echo "Creating a Python Virtual Environment in /opt/gecosccui-$GECOSCC_VERSION"
 pip install virtualenv
 cd /opt/
-virtualenv gecosccui-$GECOSCC_VERSION
+virtualenv -p /opt/rh/python27/root/usr/bin/python2.7 gecosccui-$GECOSCC_VERSION
 echo "Activating Python Virtual Environment"
 cd /opt/gecosccui-$GECOSCC_VERSION
 export PS1="GECOS>" 
-source bin/activate
+source /opt/gecosccui-$GECOSCC_VERSION/bin/activate
+echo "Updating pip"
+pip install --upgrade pip
 echo "Installing gevent"
-pip install "https://pypi.python.org/packages/source/g/gevent/gevent-1.0.tar.gz" 
+pip install gevent
 echo "Installing supervisor"
 pip install supervisor
 echo "Installing GECOS Control Center UI"
 # Add --no-deps to speed up gecos-cc reinstallations and dependencies are already satisfied
-pip install --upgrade --force-reinstall "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
+pip install --upgrade "https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
 echo "Configuring GECOS Control Center"
 install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
 echo "Configuring supervisord"
 install_template "/etc/init.d/supervisord" supervisord 755 -subst
+sed -i '/^. \/etc\/init.d\/functions/a\source \/opt\/rh\/python27\/enable' /etc/init.d/supervisord
 install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.conf 644 -subst
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/log
 chkconfig supervisord on
 install_package redis
+chkconfig --level 3 redis on
 echo "GECOS CONTROL CENTER INSTALLED"
 ;;
 
@@ -257,10 +264,12 @@ echo "NGINX SERVER INSTALLED"
 POLICIES)
     echo "INSTALLING NEW POLICIES"
 
+source /opt/rh/python27/enable
+
 echo "Installing required unzip package"
 install_package unzip
 echo "Installing chef client package"
-yum localinstall $CHEF_CLIENT_PACKAGE_URL
+yum localinstall -y $CHEF_CLIENT_PACKAGE_URL
 echo "Uploading policies to CHEF"
 echo "Downloading GECOS policies"
 curl -L $GECOSCC_POLICIES_URL > /tmp/policies.zip
@@ -307,6 +316,7 @@ fi
 USER)
     echo "CREATING CONTROL CENTER SUPERUSER"
     if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
+        source /opt/rh/python27/enable
         /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini create_chef_administrator -u $ADMIN_USER_NAME -e $ADMIN_EMAIL -a admin -s -k /etc/chef-server/admin.pem -n
         echo "Please, remember the GCC password. You will need it to login into Control Center"
 
@@ -317,10 +327,12 @@ USER)
 
 PRINTERS)
     echo "LOADING PRINTERS CATALOG"
+    source /opt/rh/python27/enable
     /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini update_printers
 ;;
 PACKAGES)
     echo "LOADING PACKAGES CATALOG"
+    source /opt/rh/python27/enable
     /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini synchronize_repositories
 ;;
 esac
