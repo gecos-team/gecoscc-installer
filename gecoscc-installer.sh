@@ -207,7 +207,6 @@ echo "Configuring GECOS Control Center"
 install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
 echo "Configuring supervisord"
 install_template "/etc/init.d/supervisord" supervisord 755 -subst
-sed -i '/^. \/etc\/init.d\/functions/a\source \/opt\/rh\/python27\/enable' /etc/init.d/supervisord
 install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.conf 644 -subst
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/log
