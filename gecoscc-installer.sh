@@ -93,7 +93,8 @@ function download_cookbook {
     tar xzf /tmp/$1.tgz
 }
 
-
+# Checking if python 2.7 is installed
+[ -f /opt/rh/python27/enable ] && source /opt/rh/python27/enable
 
 # START: MAIN MENU
 
@@ -261,8 +262,6 @@ echo "NGINX SERVER INSTALLED"
 POLICIES)
     echo "INSTALLING NEW POLICIES"
 
-source /opt/rh/python27/enable
-
 echo "Installing required unzip package"
 install_package unzip
 echo "Installing chef client package"
@@ -313,7 +312,6 @@ fi
 USER)
     echo "CREATING CONTROL CENTER SUPERUSER"
     if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
-        source /opt/rh/python27/enable
         /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini create_chef_administrator -u $ADMIN_USER_NAME -e $ADMIN_EMAIL -a admin -s -k /etc/chef-server/admin.pem -n
         echo "Please, remember the GCC password. You will need it to login into Control Center"
 
@@ -324,12 +322,10 @@ USER)
 
 PRINTERS)
     echo "LOADING PRINTERS CATALOG"
-    source /opt/rh/python27/enable
     /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini update_printers
 ;;
 PACKAGES)
     echo "LOADING PACKAGES CATALOG"
-    source /opt/rh/python27/enable
     /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini synchronize_repositories
 ;;
 esac
