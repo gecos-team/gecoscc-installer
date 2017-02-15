@@ -180,13 +180,11 @@ fi
 
 #echo "Adding EPEL repository"
 if ! rpm -q epel-release-6-8.noarch; then
-#if ! rpm -q epel-release-7-9.noarch; then
     rpm -ivh --nosignature http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-    #rpm -ivh --nosignature https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-9.noarch.rpm
 fi
 echo "Installing python2.7"
-yum install -y centos-release-SCL
-yum install -y python27
+install_package centos-release-SCL
+install_package python27
 source /opt/rh/python27/enable
 echo "Creating a Python Virtual Environment in /opt/gecosccui-$GECOSCC_VERSION"
 pip install virtualenv
