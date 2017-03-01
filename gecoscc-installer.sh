@@ -213,6 +213,9 @@ mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/log
 chkconfig supervisord on
 adduser -d /opt/gecosccui-$GECOSCC_VERSION -r -s /bin/false gecoscc
+chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/sessions/
+chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisor/
+chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisord.conf
 install_package redis
 chkconfig --level 3 redis on
 echo "GECOS CONTROL CENTER INSTALLED"
