@@ -216,6 +216,8 @@ adduser -d /opt/gecosccui-$GECOSCC_VERSION -r -s /bin/false gecoscc
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/sessions/
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisor/
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisord.conf
+pip install --upgrade gevent
+pip install --upgrade pychef
 install_package redis
 chkconfig --level 3 redis on
 echo "GECOS CONTROL CENTER INSTALLED"
