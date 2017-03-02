@@ -212,7 +212,13 @@ install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/log
 chkconfig supervisord on
-adduser -d /opt/gecosccui-$GECOSCC_VERSION -r -s /bin/false gecoscc
+[ ! `id -u gecoscc 2> /dev/null` ] && \
+    adduser -d /opt/gecosccui-$GECOSCC_VERSION \
+    -r \
+    -s /bin/false \
+    gecoscc
+[ ! -d /opt/gecosccui-$GECOSCC_VERSION/sessions ] && \
+    mkdir -p /opt/gecosccui-$GECOSCC_VERSION/sessions
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/sessions/
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisor/
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisord.conf
