@@ -22,9 +22,6 @@ export ADMIN_EMAIL="gecos@guadalinex.org"
 
 export GECOS_CC_SERVER_IP="127.0.0.1"
 export CHEF_SERVER_IP="127.0.0.1"
-# Test values
-export GECOS_CC_SERVER_IP="192.168.9.202"
-export CHEF_SERVER_IP="192.168.9.202"
 
 export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
