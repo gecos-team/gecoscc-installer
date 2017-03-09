@@ -36,11 +36,11 @@ export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
 export GECOSCC_VERSION='chef12_test'
-export GECOSCC_POLICIES_URL="https://github.com/System25/gecos-workstation-management-cookbook/archive/gecosv3.zip"
-export GECOSCC_OHAI_URL="https://github.com/System25/gecos-workstation-ohai-cookbook/archive/development.zip"
-export GECOSCC_URL="https://github.com/System25/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
+export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/development.zip"
+export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/development-chef12.zip"
+export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/development-chef12.zip"
 
-TEMPLATES_URL="https://raw.githubusercontent.com/System25/gecoscc-installer/chef_12/templates/"
+TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development-chef12/templates/"
 
 export NGINX_VERSION='1.4.3'
 
@@ -206,10 +206,7 @@ echo "Installing supervisor"
 pip install supervisor
 echo "Installing GECOS Control Center UI"
 # Add --no-deps to speed up gecos-cc reinstallations and dependencies are already satisfied
-pip install --upgrade --force-reinstall "https://github.com/System25/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
-echo "Configuring GECOS Control Center"
-install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
-echo "Configuring supervisord"
+pip install --upgrade --force-reinstall $GECOSCC_URL
 install_template "/etc/init.d/supervisord" supervisord 755 -subst
 install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.conf 644 -subst
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
