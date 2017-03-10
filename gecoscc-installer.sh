@@ -36,11 +36,16 @@ export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
 export GECOSCC_VERSION='chef12_test'
-export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/development.zip"
-export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/development-chef12.zip"
-export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/development-chef12.zip"
+#export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/development.zip"
+#export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/development-chef12.zip"
+#export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/development-chef12.zip"
+#export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development-chef12/templates/"
 
-TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development-chef12/templates/"
+export GECOSCC_POLICIES_URL="https://github.com/System25/gecos-workstation-management-cookbook/archive/gecosv3.zip"
+export GECOSCC_OHAI_URL="https://github.com/System25/gecos-workstation-ohai-cookbook/archive/development.zip"
+export GECOSCC_URL="https://github.com/System25/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
+export TEMPLATES_URL="https://raw.githubusercontent.com/System25/gecoscc-installer/chef_12/templates/"
+
 
 export NGINX_VERSION='1.4.3'
 
@@ -190,18 +195,17 @@ echo "Installing python2.7"
 install_package centos-release-SCL
 install_package python27
 source /opt/rh/python27/enable
-echo "Creating a Python Virtual Environment in /opt/gecosccui-$GECOSCC_VERSION"
-pip install virtualenv
-cd /opt/
-virtualenv -p /opt/rh/python27/root/usr/bin/python2.7 gecosccui-$GECOSCC_VERSION
-echo "Activating Python Virtual Environment"
-cd /opt/gecosccui-$GECOSCC_VERSION
-export PS1="GECOS>" 
-source /opt/gecosccui-$GECOSCC_VERSION/bin/activate
 echo "Updating pip"
 pip install --upgrade pip
-echo "Installing gevent"
-pip install gevent
+echo "Updating virtualenv"
+pip install --upgrade virtualenv
+echo "Creating a Python Virtual Environment in /opt/gecosccui-$GECOSCC_VERSION"
+virtualenv -p /opt/rh/python27/root/usr/bin/python2.7 /opt/gecosccui-$GECOSCC_VERSION
+echo "Activating Python Virtual Environment"
+export PS1="GECOS>" 
+source /opt/gecosccui-$GECOSCC_VERSION/bin/activate
+###echo "Installing gevent"
+###pip install gevent
 echo "Installing supervisor"
 pip install supervisor
 echo "Installing GECOS Control Center UI"
@@ -225,8 +229,7 @@ chown -R gecoscc:gecoscc /opt/gecoscc
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/sessions/
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisor/
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisord.conf
-pip install --upgrade gevent==1.2.1
-pip install --upgrade pychef==0.3.0
+pip install --upgrade gevent==1.2.1 pychef==0.3.0
 install_package redis
 chkconfig --level 3 redis on
 # fixing gevent-socketio error
@@ -235,9 +238,9 @@ sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
 sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
  /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/socketio/transports.py
 # fixing requires.txt versions (only in development)
-sed -i -e "s/^gevent==[0-9]*\.[0-9]*\.[0-9]*/gevent==1.2.1/g" \
+sed -i -e "s/^gevent==[0-9]*\.[0-9]*/gevent==1.2.1/g" \
     /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/gecoscc-2.1.11-py2.7.egg-info/requires.txt
-sed -i -e "s/^pychef==[0-9]*\.[0-9]*\.[0-9]*/pychef==0.3.0/g" \
+sed -i -e "s/^PyChef==[0-9]*\.[0-9]*\.[0-9]*/PyChef==0.3.0/g" \
     /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/gecoscc-2.1.11-py2.7.egg-info/requires.txt
 sed -i -e "s/^requests==[0-9]*\.[0-9]*\.[0-9]*/requests==2.13.0/g" \
     /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/gecoscc-2.1.11-py2.7.egg-info/requires.txt

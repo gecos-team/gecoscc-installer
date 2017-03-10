@@ -32,7 +32,7 @@ TIMEOUT="5"
 PID_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/run/supervisord.pid
 LCK_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/run/supervisord.lock
 LOG_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/log/supervisord.log
-RUN_USER=${RUNUSER-root}
+RUN_USER=gecoscc
 
 RETVAL=0
 
