@@ -44,7 +44,7 @@ export GECOSCC_VERSION='chef12_test'
 export GECOSCC_POLICIES_URL="https://github.com/System25/gecos-workstation-management-cookbook/archive/gecosv3.zip"
 export GECOSCC_OHAI_URL="https://github.com/System25/gecos-workstation-ohai-cookbook/archive/development.zip"
 export GECOSCC_URL="https://github.com/System25/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
-#export TEMPLATES_URL="https://raw.githubusercontent.com/System25/gecoscc-installer/chef_12/templates/"
+export TEMPLATES_URL="https://raw.githubusercontent.com/n1mh/gecoscc-installer/installer_chef12_python2_7_13/templates/"
 
 
 export NGINX_VERSION='1.4.3'
