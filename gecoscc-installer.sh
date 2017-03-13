@@ -211,6 +211,9 @@ pip install supervisor
 echo "Installing GECOS Control Center UI"
 # Add --no-deps to speed up gecos-cc reinstallations and dependencies are already satisfied
 pip install --upgrade --force-reinstall $GECOSCC_URL
+echo "Configuring GECOS Control Center"
+install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
+echo "Configuring supervisord"
 install_template "/etc/init.d/supervisord" supervisord 755 -subst
 install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.conf 644 -subst
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
