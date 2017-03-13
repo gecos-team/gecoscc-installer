@@ -44,7 +44,7 @@ export GECOSCC_VERSION='chef12_test'
 export GECOSCC_POLICIES_URL="https://github.com/System25/gecos-workstation-management-cookbook/archive/gecosv3.zip"
 export GECOSCC_OHAI_URL="https://github.com/System25/gecos-workstation-ohai-cookbook/archive/development.zip"
 export GECOSCC_URL="https://github.com/System25/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
-export TEMPLATES_URL="https://raw.githubusercontent.com/System25/gecoscc-installer/chef_12/templates/"
+#export TEMPLATES_URL="https://raw.githubusercontent.com/System25/gecoscc-installer/chef_12/templates/"
 
 
 export NGINX_VERSION='1.4.3'
@@ -237,13 +237,9 @@ sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
  /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/socketio/handler.py
 sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
  /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/socketio/transports.py
-# fixing requires.txt versions (only in development)
-sed -i -e "s/^gevent==[0-9]*\.[0-9]*/gevent==1.2.1/g" \
-    /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/gecoscc-2.1.11-py2.7.egg-info/requires.txt
-sed -i -e "s/^PyChef==[0-9]*\.[0-9]*\.[0-9]*/PyChef==0.3.0/g" \
-    /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/gecoscc-2.1.11-py2.7.egg-info/requires.txt
-sed -i -e "s/^requests==[0-9]*\.[0-9]*\.[0-9]*/requests==2.13.0/g" \
-    /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/gecoscc-2.1.11-py2.7.egg-info/requires.txt
+# fixing celery and gunicorn issue with shared memory
+sed -i 's/^tmpfs/#tmpfs/' /etc/fstab
+echo -e "none\t/dev/shm\ttmpfs\tdefaults\t0\t0" >> /etc/fstab 
 
 echo "GECOS CONTROL CENTER INSTALLED"
 ;;
