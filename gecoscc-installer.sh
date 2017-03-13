@@ -242,7 +242,7 @@ sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
  /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/socketio/transports.py
 # fixing celery and gunicorn issue with shared memory
 sed -i 's/^tmpfs/#tmpfs/' /etc/fstab
-echo -e "none\t/dev/shm\ttmpfs\tdefaults\t0\t0" >> /etc/fstab 
+echo -e "none\t\t\t/dev/shm\t\ttmpfs\trw,nosuid,nodev,noexec\t0 0" >> /etc/fstab 
 
 echo "GECOS CONTROL CENTER INSTALLED"
 ;;
