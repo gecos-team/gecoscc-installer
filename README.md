@@ -1,7 +1,5 @@
 # gecoscc-installer
 
-[TOC]
-
 Script and configuration templates to install a __GECOS Control Center__.
 
 ![Installer Screenshot](https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/gecoscc-installer-01.png)
