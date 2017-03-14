@@ -20,8 +20,8 @@ export ORGANIZATION="Your Organization"
 export ADMIN_USER_NAME="superuser"
 export ADMIN_EMAIL="gecos@guadalinex.org"
 
-export GECOS_CC_SERVER_IP=`hostname -f`
-export CHEF_SERVER_IP=`hostname -f`
+export GECOS_CC_SERVER_IP="127.0.0.1"
+export CHEF_SERVER_IP="127.0.0.1"
 
 export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
@@ -92,6 +92,9 @@ function fix_host_name {
             echo -e "$IP\t$HOSTNAME" >> /etc/hosts
         fi
     done
+
+    sed -i '/^HOSTNAME=/d' /etc/sysconfig/network
+    echo "HOSTNAME=$HOSTNAME" >> /etc/sysconfig/network
 }
 
 function download_cookbook {
