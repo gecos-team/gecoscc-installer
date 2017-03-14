@@ -106,7 +106,7 @@ function download_cookbook {
 
 # START: MAIN MENU
 
-OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "Choose an option" 14 78 8 \
+OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "Choose an option" 16 78 10 \
 "CHEF" "Install Chef server" \
 "MONGODB" "Install Mongo Database." \
 "NGINX" "Install NGINX Web Server." \
