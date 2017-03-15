@@ -14,7 +14,7 @@ __GecosCC__ has been developed for [CENTOS](https://centos.org) 6.x minimal (64b
 
 ## Installation instructions
 
-1. From your `root` account (or some other user with privileges), you have to download the installer from `http://bit.ly/gecoscc-installer`.
+1. From your `root` account (or some other user with privileges), you have to download the installer from [`http://bit.ly/gecoscc-installer`](http://bit.ly/gecoscc-installer).
 ~~~
 curl -L http://bit.ly/gecoscc-installer > gecoscc-installer.sh
 ~~~
