@@ -1,8 +1,6 @@
 # gecoscc-installer
 
-Script and configuration templates to install a __GECOS Control Center__.
-
-![Installer Screenshot](https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/gecoscc-installer-01.png)
+This script installs and configure [__GECOS Control Center__](https://gecos-team.github.io) and its templates. At the end of the process you will have a complete and modern solution for corporate workstation management.
 
 ## Minimum requirements
 
@@ -12,7 +10,7 @@ In order to get __GecosCC__ installed, your server must have:
 * at least, __4GB of RAM memory__
 * 5 GB of free disk space in `/opt`
 
-__GecosCC__ has been developed for CENTOS 6.x minimal (64bits) and it must have a right FQDN and internet access.
+__GecosCC__ has been developed for [CENTOS](https://centos.org) 6.x minimal (64bits) and it must have a right FQDN and internet access.
 
 ## Installation instructions
 
