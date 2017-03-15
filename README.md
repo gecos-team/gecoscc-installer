@@ -6,9 +6,13 @@ Script and configuration templates to install a __GECOS Control Center__.
 
 ## Minimum requirements
 
-* In order to get __GecosCC__ installed, your server should have, at least, __4GB of RAM memory__ in a real or virtual server.
+In order to get __GecosCC__ installed, your server must have:
 
-* __GecosCC__ has been developed for CENTOS 6.x minimal (64bits) and it should have a right FQDN and internet access.
+* 64-bits architecture
+* at least, __4GB of RAM memory__
+* 5 GB of free disk space in `/opt`
+
+__GecosCC__ has been developed for CENTOS 6.x minimal (64bits) and it must have a right FQDN and internet access.
 
 ## Installation instructions
 
