@@ -20,8 +20,8 @@ export ORGANIZATION="Your Organization"
 export ADMIN_USER_NAME="superuser"
 export ADMIN_EMAIL="gecos@guadalinex.org"
 
-export GECOS_CC_SERVER_IP="127.0.0.1"
-export CHEF_SERVER_IP="127.0.0.1"
+export GECOS_CC_SERVER_IP=`echo $HOSTNAME| tr '[:upper:]' '[:lower:]'`
+export CHEF_SERVER_IP=`echo $HOSTNAME | tr '[:upper:]' '[:lower:]'`
 
 export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
@@ -39,8 +39,7 @@ export GECOSCC_VERSION='chef12_test'
 export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/development.zip"
 export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/development-chef12.zip"
 export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/development-chef12.zip"
-#export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development-chef12/templates/"
-export TEMPLATES_URL="https://raw.githubusercontent.com/n1mh/gecoscc-installer/installer_chef12_python2_7_13/templates/"
+export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development-chef12/templates/"
 
 export NGINX_VERSION='1.4.3'
 
