@@ -212,8 +212,29 @@ install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/log
 chkconfig supervisord on
+[ ! `id -u gecoscc 2> /dev/null` ] && \
+ adduser -d /opt/gecosccui-$GECOSCC_VERSION \
+ -r \
+ -s /bin/false \
+ gecoscc
+[ ! -d /opt/gecosccui-$GECOSCC_VERSION/sessions ] && \
+ mkdir -p /opt/gecosccui-$GECOSCC_VERSION/sessions
+[ ! -d /opt/gecoscc/media/users ] && \
+ mkdir -p /opt/gecoscc/media/users
+chown -R gecoscc:gecoscc /opt/gecoscc
+chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/sessions/
+chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisor/
+chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisord.conf
+pip install --upgrade gevent==1.2.1
+pip install --upgrade pychef==0.3.0
 install_package redis
 chkconfig --level 3 redis on
+# fixing gevent-socketio error
+sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
+ /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/socketio/handler.py
+sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
+ /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/socketio/transports.py
+
 echo "GECOS CONTROL CENTER INSTALLED"
 ;;
 
