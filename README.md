@@ -1,40 +1,81 @@
 # gecoscc-installer
 
-Script and configuration templates to install a GECOS Control Center
+This script installs and configure [__GECOS Control Center__](https://gecos-team.github.io) and its templates. At the end of the process you will have a complete and modern solution for corporate workstation management.
 
-![Installer Screenshot](https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/gecoscc-installer-01.png)
+## Minimum requirements
 
-## Instructions
+In order to get __GecosCC__ installed, your server must have:
 
-* Install a CENTOS 6.x minimal (64bits) in a real or virtual server.
+* 64-bits architecture
+* of RAM memory
+* 5 GB of free disk space in `/opt`
 
-* Log into your server.
+__GecosCC__ has been developed for [CENTOS](https://centos.org) 6.x minimal (64bits) and it must have a right FQDN and internet access.
 
-* Download the installer from http://bit.ly/gecoscc-installer:         
+## Installation instructions
 
-`curl -L http://bit.ly/gecoscc-installer > gecoscc-installer `
+![Installer Screenshot](./gecoscc-installer-01.png)
 
-* Edit the installer and change the ORGANIZATION_NAME, ADMIN_USER_NAME and ADMIN_EMAIL
+1. From your `root` account (or some other user with privileges), you have to download the installer from [`http://bit.ly/gecoscc-installer`](http://bit.ly/gecoscc-installer).
+~~~
+curl -L http://bit.ly/gecoscc-installer > gecoscc-installer.sh
+~~~
 
-* Run the installer:
-  
-`bash gecoscc-installer`
+2. Edit the installer and change the variables `ORGANIZATION_NAME`, `ADMIN_USER_NAME` and `ADMIN_EMAIL`.
+~~~
+ORGANIZATION="Your Organization"
+ADMIN_USER_NAME="superuser"
+ADMIN_EMAIL="gecos@guadalinex.org"
+~~~
 
-* Select proper menu items in order to install every component: CHEF, MONGODB, NGINX and CONTROL CENTER 
+3. Run the installer.
+~~~
+bash gecoscc-installer.sh
+~~~
 
-* Reboot the server. 
+4. You have to install all the components in the menu, in the order specified:
+	1. Chef
+	2. MongoDB
+	3. nginx
+	4. GecosCC
 
-* Select USER to create your first superuser (You can create more users from the web interface). Do not forget to write down your password!
+ Please, note that after installing every piece of software, `gecoscc-installer.sh` will exit to the command line and you will have to run the script again.
 
-Now you can log into your brand new Control Center using your web browser.
+5. After install __GecosCC__ is mandatory restart the server.
+~~~
+shutdown -r now 'restarting after install gecosCC'
+~~~
 
-If you can see the web interface, log into your server, run the installer again, and follow these steps to finish the configuration:
+## Configuration
 
-* Select POLICIES to download and install last version of workstation policies.
+1. You have to run the installer, again, for creating an administrator user (`USER` option in the menu) and give all rights (`SET_SUPERUSER` in the menu).
+~~~
+bash gecoscc-installer.sh
+~~~
 
-* Select PRINTERS to download and install a catalogue of printer models.
+2. Select `USER` to create your first superuser but remember that you can create more admins from the web interface. This command will show some messages with important data like your superadmin password. Do not forget to write it down!
 
-* Select PACKAGES to download and install a catalogue of software for your workstations.
+3. Now you should be able to log in into your brand new __Gecos Control Center__, using your favorite web browser. Just point it to your server's IP address.
 
-Ÿou can repeat these steps as many times as you need.
+## Catalogues
 
+Once you reach into your Control Center you may populate your system installing policies, printers and packages. This catalogues are optional but it is strongly recommended install policies catalogue for a better user experience.
+
+Run the installer, once more.
+~~~
+bash gecoscc-installer.sh
+~~~
+
+Execute the options that feed the system with:
+1. `POLICIES`. It will download and install last version of workstation policies.
+2. `PRINTERS`. It will download and install a catalogue with +4000 printer models.
+3. `PACKAGES`. It will download and install a huge catalogue of software to install in your workstations.
+
+You can repeat these steps as many times as you need in order to keep your __GecosCC__ updated.
+
+
+## Logging in
+
+![Installer Screenshot](./gecoscc-installer-02.png)
+
+Just point your web browser to your server's IP address and log in with your superuser information.

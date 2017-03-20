@@ -14,42 +14,32 @@
 
 set -u
 set -e
+set +o nounset
 
 export ORGANIZATION="Your Organization"
-export ADMIN_USER_NAME='superuser'
+export ADMIN_USER_NAME="superuser"
 export ADMIN_EMAIL="gecos@guadalinex.org"
 
-export GECOS_CC_SERVER_IP="127.0.0.1"
-export CHEF_SERVER_IP="127.0.0.1"
-# Test values
-export GECOS_CC_SERVER_IP="192.168.0.15"
-export CHEF_SERVER_IP="192.168.0.15"
-
-
+export GECOS_CC_SERVER_IP=`echo $HOSTNAME| tr '[:upper:]' '[:lower:]'`
+export CHEF_SERVER_IP=`echo $HOSTNAME | tr '[:upper:]' '[:lower:]'`
 
 export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
 export CHEF_SERVER_VERSION="12.6.0"
 export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-core-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
 export CHEF_CLIENT_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
-export CHEF_SERVER_URL="https://localhost/"
-export CHEF_SUPERADMIN_USER=pivotal
-export CHEF_SUPERADMIN_CERTIFICATE=/etc/opscode/pivotal.pem
-
-
+export CHEF_SERVER_URL="https://$CHEF_SERVER_IP/"
+export CHEF_SUPERADMIN_USER="pivotal"
+export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
 
 export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
-# WARNING: I set my own repositories for testing purposses!
 export GECOSCC_VERSION='chef12_test'
-export GECOSCC_POLICIES_URL="https://github.com/System25/gecos-workstation-management-cookbook/archive/gecosv3.zip"
-export GECOSCC_OHAI_URL="https://github.com/System25/gecos-workstation-ohai-cookbook/archive/development.zip"
-export GECOSCC_URL="https://github.com/System25/gecoscc-ui/archive/$GECOSCC_VERSION.tar.gz"
-
-#TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/templates/"
-TEMPLATES_URL="https://raw.githubusercontent.com/System25/gecoscc-installer/chef_12/templates/"
-
+export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/development.zip"
+export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/development-chef12.zip"
+export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/development-chef12.zip"
+export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development-chef12/templates/"
 
 export NGINX_VERSION='1.4.3'
 
@@ -90,12 +80,15 @@ function install_package {
 }
 
 function fix_host_name {
-    IP=$(hostname -I)
-    echo $IP
-    if  ! grep $IP /etc/hosts; then
-        echo "#Added by GECOS Control Center Installer" >> /etc/hosts
-        echo "$IP       $HOSTNAME" >> /etc/hosts
-    fi
+    echo "#Added by GECOS Control Center Installer" >> /etc/hosts
+    for IP in `hostname -I` ; do
+        if [ `grep -c $IP /etc/hosts` = "0" ] ; then
+            echo -e "$IP\t$HOSTNAME" >> /etc/hosts
+        fi
+    done
+
+    sed -i '/^HOSTNAME=/d' /etc/sysconfig/network
+    echo "HOSTNAME=$HOSTNAME" >> /etc/sysconfig/network
 }
 
 function download_cookbook {
@@ -105,11 +98,12 @@ function download_cookbook {
     tar xzf /tmp/$1.tgz
 }
 
-
+# Checking if python 2.7 is installed
+[ -f /opt/rh/python27/enable ] && source /opt/rh/python27/enable
 
 # START: MAIN MENU
 
-OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "Choose an option" 14 78 8 \
+OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "Choose an option" 16 78 10 \
 "CHEF" "Install Chef server" \
 "MONGODB" "Install Mongo Database." \
 "NGINX" "Install NGINX Web Server." \
@@ -170,46 +164,45 @@ echo "MONGODB INSTALLED"
 
 
 CC)
-    echo "INSTALLING GECOS CONTROL CENTER"
+echo "INSTALLING GECOS CONTROL CENTER"
 
 if pgrep supervisord > /dev/null 2>&1
   then
 
-OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "A Control Center is already running. Should I stop it?" 14 78 6 \
-"YES" "Stop current GECOS Control Center before reinstalling" \
-"NO" "Return to main menu" 3>&1 1>&2 2>&3 )
-
+  OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "A Control Center is already running. Should I stop it?" 14 78 6 \
+  "YES" "Stop current GECOS Control Center before reinstalling" \
+  "NO" "Return to main menu" 3>&1 1>&2 2>&3 )
   case $OPTION in
-    
-YES)
-    echo "Stopping GECOS Control Center"
-    /etc/init.d/supervisord stop
-;;
-NO)
-# Rerun this installer
-    exec "$0"
-;;
+    YES)
+      echo "Stopping GECOS Control Center"
+      /etc/init.d/supervisord stop
+    ;;
+    NO)
+    # Rerun this installer
+      exec "$0"
+    ;;
   esac
 fi
 
-
 echo "Adding EPEL repository"
 if ! rpm -q epel-release-6-8.noarch; then
-    rpm -ivh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+    rpm -ivh --nosignature http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
 fi
-echo "Installing python-devel and pip"
-install_package python-devel 
-install_package python-pip
+echo "Installing python2.7"
+install_package centos-release-SCL
+install_package python27
+source /opt/rh/python27/enable
+echo "Updating pip"
+pip install --upgrade pip
+echo "Updating virtualenv"
+pip install --upgrade virtualenv
 echo "Creating a Python Virtual Environment in /opt/gecosccui-$GECOSCC_VERSION"
-pip install virtualenv
-cd /opt/
-virtualenv gecosccui-$GECOSCC_VERSION
+virtualenv -p /opt/rh/python27/root/usr/bin/python2.7 /opt/gecosccui-$GECOSCC_VERSION
 echo "Activating Python Virtual Environment"
-cd /opt/gecosccui-$GECOSCC_VERSION
 export PS1="GECOS>" 
-source bin/activate
-echo "Installing gevent"
-pip install "https://pypi.python.org/packages/source/g/gevent/gevent-1.0.tar.gz" 
+source /opt/gecosccui-$GECOSCC_VERSION/bin/activate
+###echo "Installing gevent"
+###pip install gevent
 echo "Installing supervisor"
 pip install supervisor
 echo "Installing GECOS Control Center UI"
@@ -223,7 +216,31 @@ install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/log
 chkconfig supervisord on
+[ ! `id -u gecoscc 2> /dev/null` ] && \
+ adduser -d /opt/gecosccui-$GECOSCC_VERSION \
+ -r \
+ -s /bin/false \
+ gecoscc
+[ ! -d /opt/gecosccui-$GECOSCC_VERSION/sessions ] && \
+ mkdir -p /opt/gecosccui-$GECOSCC_VERSION/sessions
+[ ! -d /opt/gecoscc/media/users ] && \
+ mkdir -p /opt/gecoscc/media/users
+chown -R gecoscc:gecoscc /opt/gecoscc
+chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/sessions/
+chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisor/
+chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisord.conf
+pip install --upgrade gevent==1.2.1 pychef==0.3.0
 install_package redis
+chkconfig --level 3 redis on
+# fixing gevent-socketio error
+sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
+ /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/socketio/handler.py
+sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
+ /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/socketio/transports.py
+# fixing celery and gunicorn issue with shared memory
+sed -i 's/^tmpfs/#tmpfs/' /etc/fstab
+echo -e "none\t\t\t/dev/shm\t\ttmpfs\trw,nosuid,nodev,noexec\t0 0" >> /etc/fstab 
+
 echo "GECOS CONTROL CENTER INSTALLED"
 ;;
 
@@ -275,7 +292,7 @@ POLICIES)
 echo "Installing required unzip package"
 install_package unzip
 echo "Installing chef client package"
-yum localinstall $CHEF_CLIENT_PACKAGE_URL -y
+yum localinstall -y $CHEF_CLIENT_PACKAGE_URL
 echo "Uploading policies to CHEF"
 echo "Downloading GECOS policies"
 curl -L $GECOSCC_POLICIES_URL > /tmp/policies.zip
@@ -323,7 +340,6 @@ USER)
     if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
         /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini create_chef_administrator -u $ADMIN_USER_NAME -e $ADMIN_EMAIL -a $CHEF_SUPERADMIN_USER -s -k $CHEF_SUPERADMIN_CERTIFICATE -n
         echo "Please, remember the GCC password. You will need it to login into Control Center"
-
     else
         echo "Control Center is not installed in this machine"
     fi
@@ -339,7 +355,6 @@ SET_SUPERUSER)
         echo "Chef 12 server is not installed in this machine"
     fi
 ;;
-
 
 PRINTERS)
     echo "LOADING PRINTERS CATALOG"
