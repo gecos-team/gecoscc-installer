@@ -7,7 +7,7 @@ This script installs and configure [__GECOS Control Center__](https://gecos-team
 In order to get __GecosCC__ installed, your server must have:
 
 * 64-bits architecture
-* 4 of RAM memory on Red Hat servers and 2 GB on CentOS
+* 4 GB of RAM memory on Red Hat servers and 2 GB on CentOS
 * 5 GB of free disk space in `/opt`
 
 __GecosCC__ has been developed for [CentOS](https://centos.org) 6.x minimal (64bits) or [Red Hat Enterprise Linux](https://redhat.com) 6.x 64bits (base install) and it must have a right FQDN and internet access. In case your operating system is Red Hat, you should have your suscription updated.
