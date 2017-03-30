@@ -100,9 +100,9 @@ function download_cookbook {
 
 function OS_checking {
     if [ -f /etc/redhat-release ] ; then
-        [ `grep -c -i '^CentOS'  /etc/redhat-release` -ge "1" ] && \
+        [ `grep -c -i 'CentOS'  /etc/redhat-release` -ge "1" ] && \
             export OS_SYS='centos'
-        [ `grep -c -i '^Red Hat' /etc/redhat-release` -ge "1" ] && \
+        [ `grep -c -i 'Red Hat' /etc/redhat-release` -ge "1" ] && \
             export OS_SYS='redhat'
         export OS_VER=`cat /etc/redhat-release|egrep -o '[0-9].[0-9]'|cut -d'.' -f1`
     else
@@ -130,7 +130,6 @@ function install_scl_in_redhat {
 
     yum-config-manager --add-repo \
         https://raw.githubusercontent.com/n1mh/gecoscc-installer/dual_installer_centos_rh/templates/scl.repo
-    #yum-config-manager --enable centos-sclo-rh
 }
 
 # Checking if python 2.7 is installed
