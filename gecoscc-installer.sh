@@ -387,10 +387,6 @@ fi
 
 USER)
     echo "CREATING CONTROL CENTER SUPERUSER"
-
-    # restarting chef server to prevent timeouts
-    #/usr/bin/chef-server-ctl restart
-
     if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
         /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini create_chef_administrator -u $ADMIN_USER_NAME -e $ADMIN_EMAIL -a $CHEF_SUPERADMIN_USER -s -k $CHEF_SUPERADMIN_CERTIFICATE -n
         echo "Please, remember the GCC password. You will need it to login into Control Center"
