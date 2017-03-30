@@ -38,7 +38,7 @@ export SUPERVISOR_PASSWORD=changeme
 export GECOSCC_VERSION='chef12_test'
 export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/development.zip"
 export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/development-chef12.zip"
-export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/development-chef12.zip"
+export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/development.zip"
 export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development-chef12/templates/"
 
 export NGINX_VERSION='1.4.3'
@@ -98,8 +98,46 @@ function download_cookbook {
     tar xzf /tmp/$1.tgz
 }
 
+function OS_checking {
+    if [ -f /etc/redhat-release ] ; then
+        [ `grep -c -i '^CentOS'  /etc/redhat-release` -ge "1" ] && \
+            export OS_SYS='centos'
+        [ `grep -c -i '^Red Hat' /etc/redhat-release` -ge "1" ] && \
+            export OS_SYS='redhat'
+        export OS_VER=`cat /etc/redhat-release|egrep -o '[0-9].[0-9]'|cut -d'.' -f1`
+    else
+        echo "Operating System not supported: wrong operating system"
+        echo "Please, check documentation for more information:"
+        echo "https://github.com/gecos-team/gecoscc-installer/blob/master/README.md"
+        echo "Aborting installation process."
+        exit 1
+    fi
+
+    if [ $OS_VER -gt "6" ] ; then
+        echo "Operating System not supported: wrong version"
+        echo "Please, check documentation for more information:"
+        echo "https://github.com/gecos-team/gecoscc-installer/blob/master/README.md"
+        echo "Aborting installation process."
+        exit 2
+    fi
+}
+
+function install_scl_in_redhat {
+    yum-config-manager --enable rhel-server-rhscl-6-rpms
+    yum-config-manager --add-repo \
+        https://copr.fedoraproject.org/coprs/rhscl/centos-release-scl/repo/epel-6/rhscl-centos-release-scl-epel-6.repo
+    install_package centos-release-scl
+
+    yum-config-manager --add-repo \
+        https://raw.githubusercontent.com/n1mh/gecoscc-installer/dual_installer_centos_rh/templates/scl.repo
+    #yum-config-manager --enable centos-sclo-rh
+}
+
 # Checking if python 2.7 is installed
 [ -f /opt/rh/python27/enable ] && source /opt/rh/python27/enable
+
+# Checking if OS and version are right
+OS_checking
 
 # START: MAIN MENU
 
@@ -188,34 +226,45 @@ echo "Adding EPEL repository"
 if ! rpm -q epel-release-6-8.noarch; then
     rpm -ivh --nosignature http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
 fi
-echo "Installing python2.7"
-install_package centos-release-SCL
+
+if [ $OS_SYS = 'centos' ] ; then
+    install_package centos-release-scl
+else
+    install_scl_in_redhat
+fi
+
+echo "Installing python2.7 on $OS_SYS"
 install_package python27
 source /opt/rh/python27/enable
+
 echo "Updating pip"
 pip install --upgrade pip
 echo "Updating virtualenv"
 pip install --upgrade virtualenv
 echo "Creating a Python Virtual Environment in /opt/gecosccui-$GECOSCC_VERSION"
 virtualenv -p /opt/rh/python27/root/usr/bin/python2.7 /opt/gecosccui-$GECOSCC_VERSION
+
 echo "Activating Python Virtual Environment"
 export PS1="GECOS>" 
 source /opt/gecosccui-$GECOSCC_VERSION/bin/activate
-###echo "Installing gevent"
-###pip install gevent
+
 echo "Installing supervisor"
 pip install supervisor
+
 echo "Installing GECOS Control Center UI"
 # Add --no-deps to speed up gecos-cc reinstallations and dependencies are already satisfied
-pip install --upgrade --force-reinstall $GECOSCC_URL
+pip install --upgrade $GECOSCC_URL
+
 echo "Configuring GECOS Control Center"
 install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
+
 echo "Configuring supervisord"
 install_template "/etc/init.d/supervisord" supervisord 755 -subst
 install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.conf 644 -subst
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/log
 chkconfig supervisord on
+
 [ ! `id -u gecoscc 2> /dev/null` ] && \
  adduser -d /opt/gecosccui-$GECOSCC_VERSION \
  -r \
@@ -229,21 +278,22 @@ chown -R gecoscc:gecoscc /opt/gecoscc
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/sessions/
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisor/
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisord.conf
-pip install --upgrade gevent==1.2.1 pychef==0.3.0
+
 install_package redis
 chkconfig --level 3 redis on
+
 # fixing gevent-socketio error
 sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
  /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/socketio/handler.py
 sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
  /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/socketio/transports.py
+
 # fixing celery and gunicorn issue with shared memory
 sed -i 's/^tmpfs/#tmpfs/' /etc/fstab
 echo -e "none\t\t\t/dev/shm\t\ttmpfs\trw,nosuid,nodev,noexec\t0 0" >> /etc/fstab 
 
 echo "GECOS CONTROL CENTER INSTALLED"
 ;;
-
 
 NGINX)
     echo "INSTALLING NGINX WEB SERVER"
@@ -337,6 +387,10 @@ fi
 
 USER)
     echo "CREATING CONTROL CENTER SUPERUSER"
+
+    # restarting chef server to prevent timeouts
+    #/usr/bin/chef-server-ctl restart
+
     if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
         /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini create_chef_administrator -u $ADMIN_USER_NAME -e $ADMIN_EMAIL -a $CHEF_SUPERADMIN_USER -s -k $CHEF_SUPERADMIN_CERTIFICATE -n
         echo "Please, remember the GCC password. You will need it to login into Control Center"
