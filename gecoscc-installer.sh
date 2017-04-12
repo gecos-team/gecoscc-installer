@@ -35,16 +35,17 @@ export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
 export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
-export GECOSCC_VERSION='chef12_test'
-export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/development.zip"
-export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/development-chef12.zip"
-export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/development.zip"
-export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development-chef12/templates/"
+export GECOSCC_VERSION='development'
+export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/$GECOSCC_VERSION.zip"
+export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/$GECOSCC_VERSION.zip"
+export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip"
+export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/$GECOSCC_VERSION/templates/"
 
 export NGINX_VERSION='1.4.3'
 
 export RUBY_GEMS_REPOSITORY_URL="https://rubygems.org"
-export HELP_URL="http://forja.guadalinex.org/webs/gecos/doc/v2/doku.php"
+export HELP_URL="https://github.com/gecos-team/gecos-doc/wiki/Politicas:"
+
 
 # FUNCTIONS
 
