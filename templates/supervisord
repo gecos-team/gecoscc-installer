@@ -28,11 +28,13 @@ PROGRAM="supervisord"
 TIMEOUT="5"
 
 [ -e /etc/sysconfig/$PROGRAM ] && . /etc/sysconfig/$PROGRAM
+[ -f /opt/rh/python27/enable ] && source /opt/rh/python27/enable
+[ -f /opt/gecosccui-chef12_test/bin/activate ] && source /opt/gecosccui-chef12_test/bin/activate
 
 PID_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/run/supervisord.pid
 LCK_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/run/supervisord.lock
 LOG_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/log/supervisord.log
-RUN_USER=${RUNUSER-root}
+RUN_USER=gecoscc
 
 RETVAL=0
 
