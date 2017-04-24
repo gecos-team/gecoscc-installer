@@ -322,7 +322,7 @@ pip install supervisor
 
 echo "Installing LDAP authentication dependencies"
 install_package openldap-devel
-pip install python-ldap
+pip install -y python-ldap
 
 echo "Installing GECOS Control Center UI"
 # Add --no-deps to speed up gecos-cc reinstallations and dependencies are already satisfied
