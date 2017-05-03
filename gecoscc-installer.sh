@@ -133,7 +133,7 @@ function install_scl_in_redhat {
     install_package centos-release-scl
 
     yum-config-manager --add-repo \
-        https://raw.githubusercontent.com/n1mh/gecoscc-installer/dual_installer_centos_rh/templates/scl.repo
+        https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development/templates/scl.repo
 }
 
 function get_ldap_info {
