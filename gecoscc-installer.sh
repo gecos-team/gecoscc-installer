@@ -161,7 +161,7 @@ CHEF)
     echo "Downloading package $CHEF_SERVER_PACKAGE_URL"
     curl -L "$CHEF_SERVER_PACKAGE_URL" > /tmp/chef-server.rpm
     echo "Installing package"
-    rpm -Uvh --nosignature /tmp/chef-server.rpm
+    rpm -Uvh /tmp/chef-server.rpm
     echo "Checking host name resolution"
     fix_host_name
     echo "Configuring"
