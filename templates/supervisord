@@ -29,7 +29,7 @@ TIMEOUT="5"
 
 [ -e /etc/sysconfig/$PROGRAM ] && . /etc/sysconfig/$PROGRAM
 [ -f /opt/rh/python27/enable ] && source /opt/rh/python27/enable
-[ -f /opt/gecosccui-chef12_test/bin/activate ] && source /opt/gecosccui-chef12_test/bin/activate
+[ -f /opt/gecosccui-${GECOSCC_VERSION}/bin/activate ] && source /opt/gecosccui-${GECOSCC_VERSION}/bin/activate
 
 PID_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/run/supervisord.pid
 LCK_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/run/supervisord.lock
@@ -43,6 +43,9 @@ start() {
 
     umask 0027
     echo -n "Starting $PROGRAM: "
+
+    # change to CC directory to avoid some errors when user is not root
+    cd /opt/gecosccui-${GECOSCC_VERSION}
     # We do NOT expect executable to fork. Disown.
     daemon --user "$RUN_USER"     \
            --pidfile="$PID_FILE"  \
