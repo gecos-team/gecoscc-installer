@@ -35,11 +35,11 @@ export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
 export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
-export GECOSCC_VERSION='master'
-export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/$GECOSCC_VERSION.zip"
-export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/$GECOSCC_VERSION.zip"
+export GECOSCC_VERSION='2.2.0'
+export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.5.0.zip"
+export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/1.10.0.zip"
 export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip"
-export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/$GECOSCC_VERSION/templates/"
+export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.2.0/templates/"
 
 export NGINX_VERSION='1.4.3'
 
@@ -223,20 +223,6 @@ if pgrep supervisord > /dev/null 2>&1
   esac
 fi
 
-<<<<<<< HEAD
-#echo "Adding EPEL repository"
-if ! rpm -q epel-release-6-8.noarch; then
-    rpm -ivh --nosignature http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-fi
-echo "Installing python2.7"
-install_package centos-release-SCL
-install_package python27
-source /opt/rh/python27/enable
-echo "Creating a Python Virtual Environment in /opt/gecosccui-$GECOSCC_VERSION"
-pip install virtualenv
-cd /opt/
-virtualenv -p /opt/rh/python27/root/usr/bin/python2.7 gecosccui-$GECOSCC_VERSION
-=======
 echo "Adding EPEL repository"
 if ! rpm -q epel-release-6-8.noarch; then
     rpm -ivh --nosignature http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
