@@ -1,0 +1,147 @@
+[app:gecoscc]
+
+#
+# Please, check https://github.com/gecos-team/gecoscc-ui/blob/development/config-templates/development.ini
+# and do not forget to include latest changes
+#
+
+# Monitoring parameters
+server_name = ${app:gecoscc-server_name}
+server_ip = ${app:gecoscc-server_ip}
+
+# This pattern must be http[s]://<user>:<password>@%s:<port>/RPC2
+# Internally %s will be replaced by server IP
+# user and password must match the ones in supervisord.conf
+supervisord.url.pattern = ${app:gecoscc-supervisord.url.pattern}
+
+# This pattern could be HTTP or HTTPS depending on your configuration
+gecos.internal.url.pattern = ${app:gecoscc-gecos.internal.url.pattern}
+
+use = ${app:gecoscc-use}
+
+pyramid.reload_templates = ${app:gecoscc-pyramid.reload_templates}
+pyramid.debug_authorization = ${app:gecoscc-pyramid.debug_authorization}
+pyramid.debug_notfound = ${app:gecoscc-pyramid.debug_notfound}
+pyramid.debug_routematch = ${app:gecoscc-pyramid.debug_routematch}
+pyramid.debug_templates = ${app:gecoscc-pyramid.debug_templates}
+pyramid.default_locale_name = ${app:gecoscc-pyramid.default_locale_name}
+pyramid.locales = ${app:gecoscc-pyramid.locales}
+
+jinja2.directories = ${app:gecoscc-jinja2.directories}
+jinja2.filters = ${app:gecoscc-jinja2.filters}
+
+mongo_uri = ${app:gecoscc-mongo_uri}
+
+#session.type = memory
+session.type = ${app:gecoscc-session.type}
+session.data_dir = ${app:gecoscc-session.data_dir}
+session.lock_dir = ${app:gecoscc-session.lock_dir}
+session.key = ${app:gecoscc-session.key}
+session.secret = ${app:gecoscc-session.secret}
+session.cookie_on_exception = ${app:gecoscc-session.cookie_on_exception}
+
+# Chef version number (in X.Y.Z format)
+chef.version = ${app:gecoscc-chef.version}
+chef.url = ${app:gecoscc-chef.url}
+chef.cookbook_name = ${app:gecoscc-chef.cookbook_name}
+chef.seconds_sleep_is_busy = ${app:gecoscc-chef.seconds_sleep_is_busy}
+chef.seconds_block_is_busy = ${app:gecoscc-chef.seconds_block_is_busy}
+# smart_lock_sleep_factor is use to avoid concurrency problem
+# We use this parameter to sleep the process between GET and POST request.
+# It's a temporary solution 
+chef.smart_lock_sleep_factor = ${app:gecoscc-chef.smart_lock_sleep_factor}
+# ssl_verify is used to avoid urllib3 ssl certificate validation
+chef.ssl.verify = ${app:gecoscc-chef.ssl.verify}
+
+# CELERY (using redis backend)
+celery_broker_url = ${app:gecoscc-celery_broker_url}
+
+# SOCKETS (using redis backend)
+sockjs_url = ${app:gecoscc-sockjs_url}
+
+firstboot_api.version = ${app:gecoscc-firstboot_api.version}
+firstboot_api.organization_name = ${app:gecoscc-firstboot_api.organization_name}
+firstboot_api.media = ${app:gecoscc-firstboot_api.media}
+firstboot_api.gem_repo = ${app:gecoscc-firstboot_api.gem_repo}
+
+help_manual_url = ${app:gecoscc-help_manual_url}
+
+update_error_interval = ${app:gecoscc-update_error_interval}
+
+repositories = ${app:gecoscc-repositories}
+
+printers.urls = ${app:gecoscc-printers.urls}
+
+software_profiles = ${app:gecoscc-software_profiles}
+
+mimetypes = ${app:gecoscc-mimetypes}
+
+# Cookbook upload config
+# The gecoscc user must have permissions 
+cookbook_upload_rootdir = ${app:gecoscc-cookbook_upload_rootdir}
+cmd_upload = ${app:gecoscc-cmd_upload}
+cmd_import = ${app:gecoscc-cmd_import}
+adminuser = ${app:gecoscc-adminuser}
+admincert = ${app:gecoscc-admincert}
+knifeconf = ${app:gecoscc-knifeconf}
+
+${app:gecoscc-extras}
+
+[pipeline:main]
+pipeline = ${pipeline:main-pipeline}
+${pipeline:main-extras}
+
+[filter:translogger]
+use = ${filter:translogger-use}
+setup_console_handler = ${filter:translogger-setup_console_handler}
+${filter:translogger-extras}
+
+[server:main]
+use = ${server:main-use}
+host = ${server:main-host}
+port = ${server:main-port}
+workers = ${server:main-workers}
+# Choose between a proxy safe worker class 
+# worker_class = gevent
+# Or this websockets worker (better user interaction and ui refresh)
+worker_class = ${server:main-worker_class}
+timeout = ${server:main-timeout}
+${server:main-extras}
+
+# Begin logging configuration
+
+[loggers]
+keys = ${loggers-keys}
+${loggers-extras}
+
+[handlers]
+keys = ${handlers-keys}
+${handlers-extras}
+
+[formatters]
+keys = ${formatters-keys}
+${formatters-extras}
+
+[logger_root]
+level = ${logger_root-level}
+handlers = ${logger_root-handlers}
+${logger_root-extras}
+
+[logger_gecoscc]
+level = ${logger_gecoscc-level}
+handlers = ${logger_gecoscc-handlers}
+qualname = ${logger_gecoscc-qualname}
+${logger_gecoscc-extras}
+
+[handler_console]
+class = ${handler_console-class}
+args = ${handler_console-args}
+level = ${handler_console-level}
+formatter = ${handler_console-formatter}
+${handler_console-extras}
+
+[formatter_generic]
+format = ${formatter_generic-format}
+${formatter_generic-extras}
+
+# End logging configuration
