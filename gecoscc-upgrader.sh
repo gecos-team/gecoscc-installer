@@ -34,7 +34,7 @@ NO_RAMCHECK='no'
 
 # -- gecoscc variables
 GCC_GCCNAME="gecoscc-installer.sh"
-GCC_INSTURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/$GCC_GCCNAME"
+GCC_INSTURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development/$GCC_GCCNAME"
 GCC_DWN_INS=`curl -s -L -o /tmp/$GCC_GCCNAME $GCC_INSTURL`
 GCC_VERSION=`cat /tmp/$GCC_GCCNAME | grep 'export GECOSCC_VERSION'      | cut -d"'" -f2`
 GCC_TPL_DIR=`cat /tmp/$GCC_GCCNAME | grep 'export TEMPLATES_URL'        | cut -d'"' -f2 | sed -e 's/$GECOSCC_VERSION/'"$GCC_VERSION"'/'`
@@ -48,11 +48,11 @@ GCC_SCLREPO="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/$GCC
 GCC_PYT_DIR="/opt/rh/python27"
 GCC_PYT_LST="pip virtualenv"
 GCC_OPT_DIR="/opt/gecosccui-$GCC_VERSION"
-GCC_GECOSUI="https://github.com/gecos-team/gecoscc-ui/archive/master.zip"
-#GCC_GECOSUI="https://github.com/gecos-team/gecoscc-ui/archive/$GCC_VERSION.zip"
+#GCC_GECOSUI="https://github.com/gecos-team/gecoscc-ui/archive/master.zip"
+GCC_GECOSUI="https://github.com/gecos-team/gecoscc-ui/archive/$GCC_VERSION.zip"
 GCC_GCC_DIR="/opt/gecoscc/media"
 GCC_MED_DIR="$GCC_GCC_DIR/media"
-GCC_TOOLURL="https://raw.githubusercontent.com/n1mh/gecoscc-installer/gcc_upgrader/tools"
+GCC_TOOLURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/$GCC_VERSION/tools"
 GCC_GCC_PSR="$GCC_TOOLURL/gecoscc-parser.py"
 GCC_INI_OLD="$GCC_OLD_DIR/gecoscc.ini"
 GCC_INI_NEW="$GCC_OPT_DIR/gecoscc.ini"
@@ -672,10 +672,6 @@ function configuringGCC22() {
     write2log "configuring GECOSCC 2.2"
 
     write2log "parsing gecoscc.ini"
-
-    ###################################################################################################
-    local GCC_TPL_DIR="https://raw.githubusercontent.com/n1mh/gecoscc-installer/gcc_upgrader/templates"
-    ###################################################################################################
 
     curl -s -L -O $GCC_GCC_PSR  && chmod 755 gecoscc-parser.py
     curl -s -L -O $GCC_TPL_DIR/gecoscc.tpl 
