@@ -34,7 +34,7 @@ NO_RAMCHECK='no'
 
 # -- gecoscc variables
 GCC_GCCNAME="gecoscc-installer.sh"
-GCC_INSTURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development/$GCC_GCCNAME"
+GCC_INSTURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.2.0/$GCC_GCCNAME"
 GCC_DWN_INS=`curl -s -L -o /tmp/$GCC_GCCNAME $GCC_INSTURL`
 GCC_VERSION=`cat /tmp/$GCC_GCCNAME | grep 'export GECOSCC_VERSION'      | cut -d"'" -f2`
 GCC_TPL_DIR=`cat /tmp/$GCC_GCCNAME | grep 'export TEMPLATES_URL'        | cut -d'"' -f2 | sed -e 's/$GECOSCC_VERSION/'"$GCC_VERSION"'/'`
