@@ -292,6 +292,14 @@ function preparingChef11() {
     sed -i 's/self.to_hash.to_json(\*a)/self.to_hash.to_json(*a, :max_nesting => 1000)/g' \
         $CHEF_11_DIR/embedded/lib/ruby/gems/1.9.1/gems/chef-$CHEF_VERS/lib/chef/cookbook/metadata.rb
 
+    write2log "seeking for knife program"
+    if [ ! -f /opt/chef/bin/knife ] ; then
+        write2log "/opt/chef/bin/knife not found"
+        echo "ERROR: /opt/chef/bin/knife not found. Please solve this issue"
+        echo "       and execute $NAME again."
+        exit 9
+    fi
+
     write2log "fixing cookbooks issues"
     if [ ! -f /tmp/knife.rb ] ; then
         write2log "/tmp/knife.rb not found. Trying default configuration"
@@ -300,12 +308,12 @@ function preparingChef11() {
         GCC_KNIFE="-c /tmp/knife.rb"
     fi
 
-    KNIFE_TEST=`knife cookbook list $GCC_KNIFE 2> /dev/null | grep -c ^ohai`
+    KNIFE_TEST=`/opt/chef/bin/knife cookbook list $GCC_KNIFE 2> /dev/null | grep -c ^ohai`
     if [ $KNIFE_TEST -eq "0" ] ; then
-        write2log "failed finding /tmp/knife.rb file"
-        echo "ERROR: failed finding /tmp/knife.rb. Please solve this"
+        write2log "failed getting cookbooks list"
+        echo "ERROR: unable to get cookbook list. Please solve this"
         echo "       error and restart upgrading process."
-        exit 9
+        exit 10
     fi
 
     COOKBOOKDIR="/tmp/upgrader_cb" 
