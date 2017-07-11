@@ -16,6 +16,8 @@ set -u
 set -e
 set +o nounset
 
+export LANG="C"
+
 export ORGANIZATION="Your Organization"
 export ADMIN_USER_NAME="superuser"
 export ADMIN_EMAIL="gecos@guadalinex.org"
@@ -40,6 +42,7 @@ export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-man
 export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/$GECOSCC_VERSION.zip"
 export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip"
 export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/$GECOSCC_VERSION/templates/"
+export GECOSCC_LDAP_AUTH="no"
 
 export NGINX_VERSION='1.4.3'
 
@@ -133,6 +136,63 @@ function install_scl_in_redhat {
         https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development/templates/scl.repo
 }
 
+function get_ldap_info {
+    LDAP_CONF_IS_RIGHT="ko"
+    while [ $LDAP_CONF_IS_RIGHT != "ok" ] ; do
+        export LDAP__URI=$(whiptail \
+            --title "GECOS Control Center Installation" \
+            --inputbox "Introduce your LDAP server URI" 11 78 "ldaps://111.222.333.444" 3>&1 1>&2 2>&3)
+
+        export LDAP_PORT=$(whiptail \
+            --title "GECOS Control Center Installation" \
+            --inputbox "Introduce your LDAP server port" 11 78 "389" 3>&1 1>&2 2>&3)
+
+        export LDAP_PRFX=$(whiptail \
+            --title "GECOS Control Center Installation" \
+            --inputbox "Introduce your user Base DN prefix" 11 78 "id=" 3>&1 1>&2 2>&3)
+
+        export LDAP_BASE=$(whiptail \
+            --title "GECOS Control Center Installation" \
+            --inputbox "Introduce your Base DN " 11 78 "ou=users,dc=example,dc=com" 3>&1 1>&2 2>&3)
+
+        export LDAP_ADMN=$(whiptail \
+            --title "GECOS Control Center Installation" \
+            --inputbox "Introduce your privileged user or leave it empty for anonymous connection" 11 78 "cn=user,dc=example,dc=com" 3>&1 1>&2 2>&3)
+
+        export LDAP_PASS=$(whiptail \
+            --title "GECOS Control Center Installation" \
+            --passwordbox "Introduce user's password" 11 78 3>&1 1>&2 2>&3)
+
+        if (whiptail --title "GECOS Control Center Installation" \
+            --yesno "Is this information right?\n
+              LDAP URI : $LDAP__URI
+             LDAP Port : $LDAP_PORT
+            Base Prefix: $LDAP_PRFX
+               Base DN : $LDAP_BASE
+             Bind User : $LDAP_ADMN" \
+            15 78) then
+            LDAP_CONF_IS_RIGHT="ok"
+        fi
+    done
+}
+
+function put_ldap_info {
+    GCC_INI="/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini"
+
+    if [ ! -f $GCC_INI ] ; then
+        echo "$GCC_INI file not found."
+        echo "LDAP authentication configuration is not complete. Aborting"
+        exit 10
+    fi
+
+    sed -i "s|^#gecos.ldap.url  = ldaps://111.222.333.444|gecos.ldap.url  = $LDAP__URI|"    $GCC_INI
+    sed -i "s|^#gecos.ldap.port = 636|gecos.ldap.port = $LDAP_PORT|"                        $GCC_INI
+    sed -i "s|^#gecos.ldap.prfx = cn=|gecos.ldap.prfx = $LDAP_PRFX|"                        $GCC_INI
+    sed -i "s|^#gecos.ldap.base = ou=users,dc=example,dc=com|gecos.ldap.base = $LDAP_BASE|" $GCC_INI
+    sed -i "s|^#gecos.ldap.admn = cn=user,dc=example,dc=com|gecos.ldap.admn = $LDAP_ADMN|"  $GCC_INI
+    sed -i "s|^#gecos.ldap.pass = SuperSecretPassword|gecos.ldap.pass = $LDAP_PASS|"        $GCC_INI
+}
+
 # Checking if python 2.7 is installed
 [ -f /opt/rh/python27/enable ] && source /opt/rh/python27/enable
 
@@ -222,6 +282,15 @@ if pgrep supervisord > /dev/null 2>&1
   esac
 fi
 
+if (whiptail --title "GECOS Control Center Installation" \
+             --yesno \
+"Do you want to authenticate GECOS Control Center using LDAP server?\n\n
+You can change this behaviour anytime by editing gecoscc.ini file in
+/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini." 11 78) then
+    export GECOSCC_LDAP_AUTH="yes"
+    get_ldap_info
+fi
+
 echo "Adding EPEL repository"
 if ! rpm -q epel-release-6-8.noarch; then
     rpm -ivh --nosignature http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
@@ -251,12 +320,21 @@ source /opt/gecosccui-$GECOSCC_VERSION/bin/activate
 echo "Installing supervisor"
 pip install supervisor
 
+echo "Installing LDAP authentication dependencies"
+install_package openldap-devel
+pip install -y python-ldap
+
 echo "Installing GECOS Control Center UI"
 # Add --no-deps to speed up gecos-cc reinstallations and dependencies are already satisfied
 pip install --upgrade $GECOSCC_URL
 
 echo "Configuring GECOS Control Center"
 install_template "/opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini" gecoscc.ini 644 -subst
+
+if [ $GECOSCC_LDAP_AUTH = "yes" ] ; then
+    echo "Configuring LDAP authentication for GCC"
+    put_ldap_info
+fi
 
 echo "Configuring supervisord"
 install_template "/etc/init.d/supervisord" supervisord 755 -subst
