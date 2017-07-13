@@ -31,6 +31,7 @@ LOGF="$HOME/$NAME.log"
 DATE=`date +%Y%m%d%H%M`
 MANPATH="/usr/share/man/"
 NO_RAMCHECK='no'
+PIVOTAL_PEM='no'
 
 # -- gecoscc variables
 GCC_GCCNAME="gecoscc-installer.sh"
@@ -174,6 +175,13 @@ function parsingArgs() {
         write2log "arg: $VARIABLE"
         case $VARIABLE in
             '--no-ram-check') NO_RAMCHECK='yes' ;;
+            '--pivotal-pem' ) shift
+                if [ -f $1 ] ; then
+                    PIVOTAL_PEM="$1"
+                else
+                    write2log "file provided by argument doesn't exist."
+                fi
+                ;;
         esac
         shift
     done
@@ -606,6 +614,27 @@ function deleteChef11() {
     fi
 }
 
+function checkForPivotalPEM() {
+    write2log "checking for pivotal certificate..."
+
+    if [ $PIVOTAL_PEM != 'no' ] ; then
+        write2log "user provide a certificate in $PIVOTAL_PEM. Using it."
+    else
+        if [ -f $CHEF_12_ETC/pivotal.pem ] ; then
+            PIVOTAL_PEM="$CHEF_12_ETC/pivotal.pem"
+        else
+            write2log "ERROR: $CHEF_12_ETC/pivotal.pem not found"
+            echo -e   "ERROR: $CHEF_12_ETC/pivotal.pem not found"
+            echo -e   " You must provide the upgrader with pivotal's certificate in the path"
+            echo -e   "                  $CHEF_12_ETC/pivotal.pem\n"
+            echo -e   " In case you have the file in other location, pass it to the script with"
+            echo -e   " the argument --pivotal-pem.\n"
+            echo -e   " i.e.: $NAME --pivotal-pem /tmp/cert_chef_piv.pem"
+            exit 11
+        fi
+    fi
+}
+
 function installingPython27() {
     write2log "updating python to 2.7..."
 
@@ -770,19 +799,19 @@ function executePmanage() {
             GCC_ACT="$GCC_OPT_DIR/bin/activate"
             CHEFETC=$CHEF_12_ETC
             PM_USER="pivotal"
-            [ -f $PY_ENAB ] && source $PY_ENAB
             ;;
     esac
 
     write2log "executing pmanage: $VERSION $COMMAND"
 
+    [ -f $PY_ENAB ] && source $PY_ENAB
     [ -f $GCC_ACT ] && source $GCC_ACT
 
     $PMANAGE \
         $GCC_INI \
         $COMMAND \
         -a $PM_USER \
-        -k $CHEFETC/$PM_USER.pem >> $OUTPUT 2>&1
+        -k $PIVOTAL_PEM >> $OUTPUT 2>&1
     checkOutput "$?" "executing pmanage: ver $VERSION comm $COMMAND"
 }
 ###############################################################################
@@ -826,6 +855,7 @@ while [ "$MENU_OPTION" != "Exit" ] ; do
             ;;
         "Upgrade GECOSCC")
             write2log "Upgrading GECOSCC"
+            checkForPivotalPEM
             installingPython27
             installingGCC22
             configuringGCC22
