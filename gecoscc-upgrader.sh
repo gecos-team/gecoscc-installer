@@ -42,7 +42,6 @@ GCC_VERSION=`cat /tmp/$GCC_GCCNAME | grep 'export GECOSCC_VERSION'      | cut -d
 GCC_TPL_DIR="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/templates"
 GCC_OHAI_CB=`cat /tmp/$GCC_GCCNAME | grep 'export GECOSCC_OHAI_URL'     | cut -d'"' -f2 | sed -e 's/$GECOSCC_VERSION/'"$GCC_VERSION"'/'`
 GCC_WSMG_CB=`cat /tmp/$GCC_GCCNAME | grep 'export GECOSCC_POLICIES_URL' | cut -d'"' -f2 | sed -e 's/$GECOSCC_VERSION/'"$GCC_VERSION"'/'`
-GCC_OPT_DIR="/opt/gecosccui-$GCC_VERSION"
 GCC_SUPER_D="/etc/init.d/supervisord"
 if [ -f $GCC_SUPER_D ] ; then
     GCC_OLD_DIR="/opt/`grep '^EXECUTE' $GCC_SUPER_D | cut -d'/' -f3`"
