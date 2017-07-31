@@ -384,7 +384,6 @@ function preparingChef11() {
         /opt/chef/bin/knife cookbook delete $COOK__DEF -a -y $GCC_KNIFE
         /opt/chef/bin/knife cookbook upload $COOK__DEF -o $COOKBOOKDIR/$COOK_NAME $GCC_KNIFE
      done
-    executePmanage "11" "import_policies"
 }
 
 function installingChef() {
@@ -825,7 +824,7 @@ function executePmanage() {
         "11")
             PMANAGE="$GCC_OLD_DIR/bin/pmanage"
             GCC_INI="$GCC_INI_OLD"
-            PY_ENAB=""
+            PY_ENAB="not_enabled"
             GCC_ACT="$GCC_OLD_DIR/bin/activate"
             CHEFETC=$CHEF_11_ETC
             PM_USER="admin"
