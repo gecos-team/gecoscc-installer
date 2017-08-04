@@ -480,7 +480,7 @@ function exportingChef11() {
     write2log "saving last state in $CHEF_11_PNT..."
     echo "$CHEF_11_BCK" > $CHEF_11_PNT
 
-    /etc/init.d/nginx stop
+    [  -x /etc/init.d/nginx ] && /etc/init.d/nginx stop
     $CHEF_11_BIN/chef-server-ctl stop
     $CHEF_12_BIN/chef-server-ctl stop
 
