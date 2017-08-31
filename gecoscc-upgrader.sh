@@ -539,6 +539,10 @@ function loadingUpChef12() {
     write2log "fixing chef11 exported users JSON"
     sed -i 's/"username"/"name"/' `cat $CHEF_12_PNT`/users/*.json
 
+    write2log "fixing chef11 exported validation_client_name"
+    sed -i '/"validation_client_name": /d' `cat $CHEF_12_PNT`/organizations/default/nodes/*json
+    sed -i '/"validation_client_name": /d' `cat $CHEF_12_PNT`/organizations/default/nodes/nodes/*json
+
     if [ ! -f $CHEF_12_PNT ] ; then
         whiptail --title "$WHIP__TITLE" --backtitle "$WHIP_BTITLE" \
             --msgbox "Please, select Phase 1 before Phase 2." 18 78
