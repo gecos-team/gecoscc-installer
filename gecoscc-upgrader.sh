@@ -911,12 +911,14 @@ while [ "$MENU_OPTION" != "Exit" ] ; do
             ;;
         "Check users")
             write2log "Checking users permissions"
+            checkForPivotalPEM
             executePmanage "12" "migrate_to_chef12" $CHCK_US_LOG
             write2log "Finished Checking users permissions"
             checksWarning $CHCK_US_LOG
             ;;
         "Check database")
             write2log "Checking database integrity"
+            checkForPivotalPEM
             executePmanage "12" "check_node_policies" $CHCK_DB_LOG
             write2log "Finished Checking database integrity"
             checksWarning $CHCK_DB_LOG
