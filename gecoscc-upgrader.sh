@@ -56,8 +56,7 @@ GCC_PYT_LST="pip virtualenv"
 GCC_OPT_DIR="/opt/gecosccui-$GCC_VERSION"
 #GCC_GECOSUI="https://github.com/gecos-team/gecoscc-ui/archive/master.zip"
 GCC_GECOSUI="https://github.com/gecos-team/gecoscc-ui/archive/$GCC_VERSION.zip"
-GCC_GCC_DIR="/opt/gecoscc/media"
-GCC_MED_DIR="$GCC_GCC_DIR/media"
+GCC_MED_DIR="/opt/gecoscc/media"
 #GCC_TOOLURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/$GCC_VERSION/tools"
 GCC_TOOLURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/tools"
 GCC_GCC_PSR="$GCC_TOOLURL/gecoscc-parser.py"
@@ -795,7 +794,7 @@ function configuringGCC22() {
     [ ! -d $GCC_MED_DIR/users ] && \
          mkdir -p $GCC_MED_DIR/users
     
-    chown -R gecoscc:gecoscc $GCC_GCC_DIR
+    chown -R gecoscc:gecoscc $GCC_MED_DIR
     chown -R gecoscc:gecoscc $GCC_OPT_DIR/sessions/
     chown -R gecoscc:gecoscc $GCC_OPT_DIR/supervisor/
 }
