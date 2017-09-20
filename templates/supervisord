@@ -18,6 +18,9 @@
 # Source function library
 . /etc/init.d/functions
 
+# Source python 2.7
+source /opt/rh/python27/enable
+
 # Service-specific variables
 
 # Service execution details

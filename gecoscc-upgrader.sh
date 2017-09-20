@@ -12,10 +12,10 @@
 # Released under EUPL License V 1.1
 # http://www.osor.eu/eupl
 
-set -o nounset
+#set -o nounset
 
 # network check, before variables assignement
-curl -o - "https://www.google.es/" 1>/dev/null 2>&1
+curl -k -o - "https://www.google.es/" 1>/dev/null 2>&1
 if [ $? -ne 0 ] ; then
     echo "Not Connected! Please check your network configuration and try again."
     exit 1
@@ -31,17 +31,23 @@ LOGF="$HOME/$NAME.log"
 DATE=`date +%Y%m%d%H%M`
 MANPATH="/usr/share/man/"
 NO_RAMCHECK='no'
+PIVOTAL_PEM='no'
 
 # -- gecoscc variables
 GCC_GCCNAME="gecoscc-installer.sh"
-GCC_INSTURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development/$GCC_GCCNAME"
+GCC_INSTURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.2.0/$GCC_GCCNAME"
 GCC_DWN_INS=`curl -s -L -o /tmp/$GCC_GCCNAME $GCC_INSTURL`
 GCC_VERSION=`cat /tmp/$GCC_GCCNAME | grep 'export GECOSCC_VERSION'      | cut -d"'" -f2`
-GCC_TPL_DIR=`cat /tmp/$GCC_GCCNAME | grep 'export TEMPLATES_URL'        | cut -d'"' -f2 | sed -e 's/$GECOSCC_VERSION/'"$GCC_VERSION"'/'`
+#GCC_TPL_DIR=`cat /tmp/$GCC_GCCNAME | grep 'export TEMPLATES_URL'        | cut -d'"' -f2 | sed -e 's/$GECOSCC_VERSION/'"$GCC_VERSION"'/'`
+GCC_TPL_DIR="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/templates"
 GCC_OHAI_CB=`cat /tmp/$GCC_GCCNAME | grep 'export GECOSCC_OHAI_URL'     | cut -d'"' -f2 | sed -e 's/$GECOSCC_VERSION/'"$GCC_VERSION"'/'`
 GCC_WSMG_CB=`cat /tmp/$GCC_GCCNAME | grep 'export GECOSCC_POLICIES_URL' | cut -d'"' -f2 | sed -e 's/$GECOSCC_VERSION/'"$GCC_VERSION"'/'`
 GCC_SUPER_D="/etc/init.d/supervisord"
-GCC_OLD_DIR="/opt/`grep '^EXECUTE' /etc/init.d/supervisord | cut -d'/' -f3`"
+if [ -f $GCC_SUPER_D ] ; then
+    GCC_OLD_DIR="/opt/`grep '^EXECUTE' $GCC_SUPER_D | cut -d'/' -f3`"
+    GCC_INI_OLD="$GCC_OLD_DIR/gecoscc.ini"
+fi
+GCC_INI_NEW="$GCC_OPT_DIR/gecoscc.ini"
 GCC_EPELPKG="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
 GCC_EPELRPO="https://copr.fedoraproject.org/coprs/rhscl/centos-release-scl/repo/epel-6/rhscl-centos-release-scl-epel-6.repo"
 GCC_SCLREPO="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/$GCC_VERSION/templates/scl.repo"
@@ -50,9 +56,9 @@ GCC_PYT_LST="pip virtualenv"
 GCC_OPT_DIR="/opt/gecosccui-$GCC_VERSION"
 #GCC_GECOSUI="https://github.com/gecos-team/gecoscc-ui/archive/master.zip"
 GCC_GECOSUI="https://github.com/gecos-team/gecoscc-ui/archive/$GCC_VERSION.zip"
-GCC_GCC_DIR="/opt/gecoscc/media"
-GCC_MED_DIR="$GCC_GCC_DIR/media"
-GCC_TOOLURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/$GCC_VERSION/tools"
+GCC_MED_DIR="/opt/gecoscc/media"
+#GCC_TOOLURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/$GCC_VERSION/tools"
+GCC_TOOLURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/tools"
 GCC_GCC_PSR="$GCC_TOOLURL/gecoscc-parser.py"
 GCC_INI_OLD="$GCC_OLD_DIR/gecoscc.ini"
 GCC_INI_NEW="$GCC_OPT_DIR/gecoscc.ini"
@@ -74,7 +80,8 @@ CHEF_11_PNT="$CHEF_11_DIR/backups/.last"
 CHEF_11_ETC="/etc/chef-server"
 CHEF_11_CNF="$CHEF_11_ETC/chef-server.rb"
 CHEF_11_KNF="$HOME/.chef/knife.rb"
-CHEF_12_PKG="https://packages.chef.io/files/stable/chef-server/$CHEFVERSION/el/6/chef-server-core-$CHEFVERSION-1.el6.x86_64.rpm"
+#CHEF_12_PKG="https://packages.chef.io/files/stable/chef-server/$CHEFVERSION/el/6/chef-server-core-$CHEFVERSION-1.el6.x86_64.rpm"
+CHEF_12_PKG="https://packages.chef.io/files/current/chef-server/12.16.9/el/6/chef-server-core-12.16.9-1.el6.x86_64.rpm"
 CHEF_12_CLT="https://packages.chef.io/files/stable/chef/$CHEFVERSION/el/6/chef-$CHEFVERSION-1.el6.x86_64.rpm"
 CHEF_12_DIR="/opt/opscode"
 CHEF_12_BIN="$CHEF_12_DIR/bin"
@@ -174,6 +181,13 @@ function parsingArgs() {
         write2log "arg: $VARIABLE"
         case $VARIABLE in
             '--no-ram-check') NO_RAMCHECK='yes' ;;
+            '--pivotal-pem' ) shift
+                if [ -f $1 ] ; then
+                    PIVOTAL_PEM="$1"
+                else
+                    write2log "file provided by argument doesn't exist."
+                fi
+                ;;
         esac
         shift
     done
@@ -252,6 +266,26 @@ function showMenu() {
         3>&1 1>&2 2>&3`
 }
 
+function downloadURL() {
+    # $1: URL to download
+    # $2: if exists, full path of the file
+
+    if [ -z "$2" ] ; then
+        local CURL_ARGS="-O"
+    else
+        local CURL_ARGS="-o $2"
+    fi
+
+    curl -s -L -f $CURL_ARGS $1
+
+    if [ $? -ne '0' ] ; then
+        write2log "ERROR: failed downloading $1"
+        echo -e   "ERROR: failed downloading $1"
+        echo -e   "Please, check the URL and run upgrader again."
+        exit 8
+    fi
+}
+
 function installPackage() {
     if [ ! `rpm -qa $*` ] ; then
         write2log "yum install $*"
@@ -288,9 +322,17 @@ function preparingChef11() {
     iptables -F
 
     write2log "fixing max nesting number"
-    CHEF_VERS=`/opt/chef-server/embedded/bin/gem list chef | grep chef | cut -d' ' -f2 | tr -d '(' | tr -d ')'`
+    CHEF_VERS=`/opt/chef-server/embedded/bin/gem spec chef| grep -A3 '^name: chef' | grep '  version:' | cut -d: -f2 | tr -d ' '`
     sed -i 's/self.to_hash.to_json(\*a)/self.to_hash.to_json(*a, :max_nesting => 1000)/g' \
         $CHEF_11_DIR/embedded/lib/ruby/gems/1.9.1/gems/chef-$CHEF_VERS/lib/chef/cookbook/metadata.rb
+
+    write2log "seeking for knife program"
+    if [ ! -f /opt/chef/bin/knife ] ; then
+        write2log "/opt/chef/bin/knife not found"
+        echo "ERROR: /opt/chef/bin/knife not found. Please solve this issue"
+        echo "       and execute $NAME again."
+        exit 9
+    fi
 
     write2log "fixing cookbooks issues"
     if [ ! -f /tmp/knife.rb ] ; then
@@ -300,12 +342,12 @@ function preparingChef11() {
         GCC_KNIFE="-c /tmp/knife.rb"
     fi
 
-    KNIFE_TEST=`knife cookbook list $GCC_KNIFE 2> /dev/null | grep -c ^ohai`
+    KNIFE_TEST=`/opt/chef/bin/knife cookbook list $GCC_KNIFE 2> /dev/null | grep -c ^chef-client`
     if [ $KNIFE_TEST -eq "0" ] ; then
-        write2log "failed finding /tmp/knife.rb file"
-        echo "ERROR: failed finding /tmp/knife.rb. Please solve this"
+        write2log "failed getting cookbooks list"
+        echo "ERROR: unable to get cookbook list. Please solve this"
         echo "       error and restart upgrading process."
-        exit 9
+        exit 10
     fi
 
     COOKBOOKDIR="/tmp/upgrader_cb" 
@@ -327,16 +369,21 @@ function preparingChef11() {
             ;;
         esac
 
+        installPackage unzip
         mkdir -p $COOKBOOKDIR/$COOK_NAME
-        curl -s -L -o $COOKBOOKDIR/$COOK_NAME/$GCC_VERSION.zip $COOK__URL
-        unzip -d $COOKBOOKDIR/$COOK_NAME $COOKBOOKDIR/$COOK_NAME/$GCC_VERSION.zip
+        downloadURL $COOK__URL $COOKBOOKDIR/$COOK_NAME/$GCC_VERSION.zip
+        unzip -qo -d $COOKBOOKDIR/$COOK_NAME $COOKBOOKDIR/$COOK_NAME/$GCC_VERSION.zip
+        if [ $? != '0' ] ; then
+            write2log "ERROR: unziping $COOKBOOKDIR/$COOK_NAME/$GCC_VERSION.zip failed."
+            exit 10
+        fi
         CB_VERS=`ls -d $COOKBOOKDIR/$COOK_NAME/gecos-workstation-$COOK_NAME* | cut -d'-' -f5`
         mv $COOKBOOKDIR/$COOK_NAME/gecos-workstation-$COOK_NAME-cookbook-$CB_VERS \
             $COOKBOOKDIR/$COOK_NAME/$COOK__DEF
+        /opt/chef/bin/knife cookbook upload $COOK__DEF -o $COOKBOOKDIR/$COOK_NAME $GCC_KNIFE
         /opt/chef/bin/knife cookbook delete $COOK__DEF -a -y $GCC_KNIFE
         /opt/chef/bin/knife cookbook upload $COOK__DEF -o $COOKBOOKDIR/$COOK_NAME $GCC_KNIFE
      done
-    executePmanage "11" "import_policies"
 }
 
 function installingChef() {
@@ -380,9 +427,9 @@ function installingChef() {
             write2log "stopping chef 11 server... "
             $CHEF_11_BIN/chef-server-ctl stop
 
-            if [ -f /etc/init.d/supervisord ] ; then
+            if [ -f $GCC_SUPER_D ] ; then
                 write2log "stopping supervisord... "
-                /etc/init.d/supervisord stop
+                $GCC_SUPER_D stop
             fi
 
             if [ -f /etc/init.d/nginx ] ; then
@@ -433,7 +480,7 @@ function exportingChef11() {
     write2log "saving last state in $CHEF_11_PNT..."
     echo "$CHEF_11_BCK" > $CHEF_11_PNT
 
-    /etc/init.d/nginx stop
+    [  -x /etc/init.d/nginx ] && /etc/init.d/nginx stop
     $CHEF_11_BIN/chef-server-ctl stop
     $CHEF_12_BIN/chef-server-ctl stop
 
@@ -492,6 +539,10 @@ function loadingUpChef12() {
     write2log "fixing chef11 exported users JSON"
     sed -i 's/"username"/"name"/' `cat $CHEF_12_PNT`/users/*.json
 
+    write2log "fixing chef11 exported validation_client_name"
+    sed -i '/"validation_client_name": /d' `cat $CHEF_12_PNT`/organizations/default/nodes/*json
+    sed -i '/"validation_client_name": /d' `cat $CHEF_12_PNT`/organizations/default/nodes/nodes/*json
+
     if [ ! -f $CHEF_12_PNT ] ; then
         whiptail --title "$WHIP__TITLE" --backtitle "$WHIP_BTITLE" \
             --msgbox "Please, select Phase 1 before Phase 2." 18 78
@@ -518,7 +569,7 @@ function changingFromChef11ToChef12() {
 
     reconfiguringChef "12"
 
-    [ -f /etc/init.d/supervisor ] && /etc/init.d/supervisor restart
+    [ -f $GCC_SUPER_D ] && $GCC_SUPER_D restart
     [ -f /etc/init.d/nginx ]      && /etc/init.d/nginx      restart
 
     write2log "granting permissions to admin user"
@@ -571,6 +622,12 @@ function updatingChefClient() {
 
 }
 
+function disablingChef11() {
+    if [ -f /etc/init/chef-server-runsvdir.conf ] ; then
+        echo "manual" > /etc/init/chef-server-runsvdir.override
+    fi
+}
+
 function deleteChef11() {
     write2log "deleting chef 11 completely"
 
@@ -595,6 +652,27 @@ function deleteChef11() {
             rm -f  $CHEF_11_ETC/chef-server-running.json
         [ -f $CHEF_11_ETC/chef-server-secrets.json ] && \
             rm -f  $CHEF_11_ETC/chef-server-secrets.json
+    fi
+}
+
+function checkForPivotalPEM() {
+    write2log "checking for pivotal certificate..."
+
+    if [ $PIVOTAL_PEM != 'no' ] ; then
+        write2log "user provide a certificate in $PIVOTAL_PEM. Using it."
+    else
+        if [ -f $CHEF_12_ETC/pivotal.pem ] ; then
+            PIVOTAL_PEM="$CHEF_12_ETC/pivotal.pem"
+        else
+            write2log "ERROR: $CHEF_12_ETC/pivotal.pem not found"
+            echo -e   "ERROR: $CHEF_12_ETC/pivotal.pem not found"
+            echo -e   " You must provide the upgrader with pivotal's certificate in the path"
+            echo -e   "                  $CHEF_12_ETC/pivotal.pem\n"
+            echo -e   " In case you have the file in other location, pass it to the script with"
+            echo -e   " the argument --pivotal-pem.\n"
+            echo -e   " i.e.: $NAME --pivotal-pem /tmp/cert_chef_piv.pem"
+            exit 12
+        fi
     fi
 }
 
@@ -672,10 +750,10 @@ function configuringGCC22() {
     write2log "configuring GECOSCC 2.2"
 
     write2log "parsing gecoscc.ini"
-
-    curl -s -L -O $GCC_GCC_PSR  && chmod 755 gecoscc-parser.py
-    curl -s -L -O $GCC_TPL_DIR/gecoscc.tpl 
-    curl -s -L -O $GCC_TPL_DIR/gecoscc.sub
+    downloadURL $GCC_GCC_PSR
+    downloadURL $GCC_TPL_DIR/gecoscc.tpl
+    downloadURL $GCC_TPL_DIR/gecoscc.sub
+    chmod 755 gecoscc-parser.py
 
     [ -f $GCC_INI_NEW ] && rm -f $GCC_INI_NEW
     write2log "parsing $GCC_INI_OLD"
@@ -686,15 +764,15 @@ function configuringGCC22() {
         $GCC_INI_NEW
     checkOutput "$?" "parsing $GCC_INI_OLD"
 
-    write2log "configuring /etc/init.d/supervisor"
+    write2log "configuring $GCC_SUPER_D"
     [ -f $GCC_SUPER_D ] && mv $GCC_SUPER_D $GCC_SUPER_D.gcc-upg
-    curl -s -L $GCC_TPL_DIR/supervisord > $GCC_SUPER_D
+    downloadURL $GCC_TPL_DIR/supervisord $GCC_SUPER_D
     sed -i 's/${GECOSCC_VERSION}/'"$GCC_VERSION"'/g' $GCC_SUPER_D
     chmod 755 $GCC_SUPER_D
 
     write2log "configuring supervisord.conf"
     [ -f $GCC_SUP_CFG ] && mv $GCC_SUP_CFG $GCC_SUP_CFG.gcc-upg
-    curl -s -L $GCC_TPL_DIR/supervisord.conf > $GCC_SUP_CFG
+    downloadURL $GCC_TPL_DIR/supervisord.conf $GCC_SUP_CFG
     sed -i 's/${GECOSCC_VERSION}/'"$GCC_VERSION"'/g'      $GCC_SUP_CFG
     sed -i 's/${SUPERVISOR_USER_NAME}/'"$GCC_SUP_USR"'/g' $GCC_SUP_CFG
     sed -i 's/${SUPERVISOR_PASSWORD}/'"$GCC_SUP_PWD"'/g'  $GCC_SUP_CFG
@@ -716,7 +794,7 @@ function configuringGCC22() {
     [ ! -d $GCC_MED_DIR/users ] && \
          mkdir -p $GCC_MED_DIR/users
     
-    chown -R gecoscc:gecoscc $GCC_GCC_DIR
+    chown -R gecoscc:gecoscc $GCC_MED_DIR
     chown -R gecoscc:gecoscc $GCC_OPT_DIR/sessions/
     chown -R gecoscc:gecoscc $GCC_OPT_DIR/supervisor/
 }
@@ -750,7 +828,7 @@ function executePmanage() {
         "11")
             PMANAGE="$GCC_OLD_DIR/bin/pmanage"
             GCC_INI="$GCC_INI_OLD"
-            PY_ENAB=""
+            PY_ENAB="not_enabled"
             GCC_ACT="$GCC_OLD_DIR/bin/activate"
             CHEFETC=$CHEF_11_ETC
             PM_USER="admin"
@@ -762,19 +840,19 @@ function executePmanage() {
             GCC_ACT="$GCC_OPT_DIR/bin/activate"
             CHEFETC=$CHEF_12_ETC
             PM_USER="pivotal"
-            [ -f $PY_ENAB ] && source $PY_ENAB
             ;;
     esac
 
     write2log "executing pmanage: $VERSION $COMMAND"
 
+    [ -f $PY_ENAB ] && source $PY_ENAB
     [ -f $GCC_ACT ] && source $GCC_ACT
 
     $PMANAGE \
         $GCC_INI \
         $COMMAND \
         -a $PM_USER \
-        -k $CHEFETC/$PM_USER.pem >> $OUTPUT 2>&1
+        -k $PIVOTAL_PEM >> $OUTPUT 2>&1
     checkOutput "$?" "executing pmanage: ver $VERSION comm $COMMAND"
 }
 ###############################################################################
@@ -809,6 +887,7 @@ while [ "$MENU_OPTION" != "Exit" ] ; do
             loadingUpChef12
             changingFromChef11ToChef12
             updatingChefClient
+            disablingChef11
             write2log "Finished Upgrading Chef 11 to Chef 12"
             ;;
         "Delete Chef 11")
@@ -818,6 +897,7 @@ while [ "$MENU_OPTION" != "Exit" ] ; do
             ;;
         "Upgrade GECOSCC")
             write2log "Upgrading GECOSCC"
+            checkForPivotalPEM
             installingPython27
             installingGCC22
             configuringGCC22
@@ -831,12 +911,14 @@ while [ "$MENU_OPTION" != "Exit" ] ; do
             ;;
         "Check users")
             write2log "Checking users permissions"
+            checkForPivotalPEM
             executePmanage "12" "migrate_to_chef12" $CHCK_US_LOG
             write2log "Finished Checking users permissions"
             checksWarning $CHCK_US_LOG
             ;;
         "Check database")
             write2log "Checking database integrity"
+            checkForPivotalPEM
             executePmanage "12" "check_node_policies" $CHCK_DB_LOG
             write2log "Finished Checking database integrity"
             checksWarning $CHCK_DB_LOG

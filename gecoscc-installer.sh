@@ -35,11 +35,11 @@ export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
 export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
-export GECOSCC_VERSION='development'
-export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/$GECOSCC_VERSION.zip"
-export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/$GECOSCC_VERSION.zip"
+export GECOSCC_VERSION='2.2.0'
+export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.5.0.zip"
+export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/1.10.0.zip"
 export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip"
-export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/$GECOSCC_VERSION/templates/"
+export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.2.0/templates/"
 
 export NGINX_VERSION='1.4.3'
 
@@ -139,6 +139,7 @@ function install_scl_in_redhat {
 # Checking if OS and version are right
 OS_checking
 
+
 # START: MAIN MENU
 
 OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "Choose an option" 16 78 10 \
@@ -161,7 +162,7 @@ CHEF)
     echo "Downloading package $CHEF_SERVER_PACKAGE_URL"
     curl -L "$CHEF_SERVER_PACKAGE_URL" > /tmp/chef-server.rpm
     echo "Installing package"
-    rpm -Uvh /tmp/chef-server.rpm
+    rpm -Uvh --nosignature /tmp/chef-server.rpm
     echo "Checking host name resolution"
     fix_host_name
     echo "Configuring"
@@ -264,6 +265,7 @@ install_template "/opt/gecosccui-$GECOSCC_VERSION/supervisord.conf" supervisord.
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/log
 chkconfig supervisord on
+
 
 [ ! `id -u gecoscc 2> /dev/null` ] && \
  adduser -d /opt/gecosccui-$GECOSCC_VERSION \
