@@ -56,8 +56,7 @@ GCC_PYT_LST="pip virtualenv"
 GCC_OPT_DIR="/opt/gecosccui-$GCC_VERSION"
 #GCC_GECOSUI="https://github.com/gecos-team/gecoscc-ui/archive/master.zip"
 GCC_GECOSUI="https://github.com/gecos-team/gecoscc-ui/archive/$GCC_VERSION.zip"
-GCC_GCC_DIR="/opt/gecoscc/media"
-GCC_MED_DIR="$GCC_GCC_DIR/media"
+GCC_MED_DIR="/opt/gecoscc/media"
 #GCC_TOOLURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/$GCC_VERSION/tools"
 GCC_TOOLURL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/master/tools"
 GCC_GCC_PSR="$GCC_TOOLURL/gecoscc-parser.py"
@@ -81,7 +80,8 @@ CHEF_11_PNT="$CHEF_11_DIR/backups/.last"
 CHEF_11_ETC="/etc/chef-server"
 CHEF_11_CNF="$CHEF_11_ETC/chef-server.rb"
 CHEF_11_KNF="$HOME/.chef/knife.rb"
-CHEF_12_PKG="https://packages.chef.io/files/stable/chef-server/$CHEFVERSION/el/6/chef-server-core-$CHEFVERSION-1.el6.x86_64.rpm"
+#CHEF_12_PKG="https://packages.chef.io/files/stable/chef-server/$CHEFVERSION/el/6/chef-server-core-$CHEFVERSION-1.el6.x86_64.rpm"
+CHEF_12_PKG="https://packages.chef.io/files/current/chef-server/12.16.9/el/6/chef-server-core-12.16.9-1.el6.x86_64.rpm"
 CHEF_12_CLT="https://packages.chef.io/files/stable/chef/$CHEFVERSION/el/6/chef-$CHEFVERSION-1.el6.x86_64.rpm"
 CHEF_12_DIR="/opt/opscode"
 CHEF_12_BIN="$CHEF_12_DIR/bin"
@@ -384,7 +384,6 @@ function preparingChef11() {
         /opt/chef/bin/knife cookbook delete $COOK__DEF -a -y $GCC_KNIFE
         /opt/chef/bin/knife cookbook upload $COOK__DEF -o $COOKBOOKDIR/$COOK_NAME $GCC_KNIFE
      done
-    executePmanage "11" "import_policies"
 }
 
 function installingChef() {
@@ -481,7 +480,7 @@ function exportingChef11() {
     write2log "saving last state in $CHEF_11_PNT..."
     echo "$CHEF_11_BCK" > $CHEF_11_PNT
 
-    /etc/init.d/nginx stop
+    [  -x /etc/init.d/nginx ] && /etc/init.d/nginx stop
     $CHEF_11_BIN/chef-server-ctl stop
     $CHEF_12_BIN/chef-server-ctl stop
 
@@ -539,6 +538,10 @@ function loadingUpChef12() {
 
     write2log "fixing chef11 exported users JSON"
     sed -i 's/"username"/"name"/' `cat $CHEF_12_PNT`/users/*.json
+
+    write2log "fixing chef11 exported validation_client_name"
+    sed -i '/"validation_client_name": /d' `cat $CHEF_12_PNT`/organizations/default/nodes/*json
+    sed -i '/"validation_client_name": /d' `cat $CHEF_12_PNT`/organizations/default/nodes/nodes/*json
 
     if [ ! -f $CHEF_12_PNT ] ; then
         whiptail --title "$WHIP__TITLE" --backtitle "$WHIP_BTITLE" \
@@ -791,7 +794,7 @@ function configuringGCC22() {
     [ ! -d $GCC_MED_DIR/users ] && \
          mkdir -p $GCC_MED_DIR/users
     
-    chown -R gecoscc:gecoscc $GCC_GCC_DIR
+    chown -R gecoscc:gecoscc $GCC_MED_DIR
     chown -R gecoscc:gecoscc $GCC_OPT_DIR/sessions/
     chown -R gecoscc:gecoscc $GCC_OPT_DIR/supervisor/
 }
@@ -825,7 +828,7 @@ function executePmanage() {
         "11")
             PMANAGE="$GCC_OLD_DIR/bin/pmanage"
             GCC_INI="$GCC_INI_OLD"
-            PY_ENAB=""
+            PY_ENAB="not_enabled"
             GCC_ACT="$GCC_OLD_DIR/bin/activate"
             CHEFETC=$CHEF_11_ETC
             PM_USER="admin"
@@ -908,12 +911,14 @@ while [ "$MENU_OPTION" != "Exit" ] ; do
             ;;
         "Check users")
             write2log "Checking users permissions"
+            checkForPivotalPEM
             executePmanage "12" "migrate_to_chef12" $CHCK_US_LOG
             write2log "Finished Checking users permissions"
             checksWarning $CHCK_US_LOG
             ;;
         "Check database")
             write2log "Checking database integrity"
+            checkForPivotalPEM
             executePmanage "12" "check_node_policies" $CHCK_DB_LOG
             write2log "Finished Checking database integrity"
             checksWarning $CHCK_DB_LOG
