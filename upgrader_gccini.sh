@@ -5,6 +5,9 @@ LANG="C"
 DATE=`date +%Y%m%d%H%M`
 GCCDIR="/opt/gecosccui-2.2.0"
 GCCINI="$GCCDIR/gecoscc.ini"
+GCCVER="2.2.0"
+CHEFPK="https://packages.chef.io/files/stable/chef/13.5.3/el/6/chef-13.5.3-1.el6.x86_64.rpm"
+CHEFCL="chef-13.5.3-1.el6.x86_64"
 
 if [ ! $(id -u) = 0 ]; then
     echo 'ERROR: debe ejecutar este script como root'
@@ -44,6 +47,18 @@ if [ `grep -c "http://v3.gecos.guadalinex.org/gecos/" $GCCINI` -eq '0' ] ; then
     sed -i 's|"http://v2.gecos.guadalinex.org/gecos/",|"http://v2.gecos.guadalinex.org/gecos/", "http://v3.gecos.guadalinex.org/gecos/",|' $GCCINI && \
     sed -i 's|"http://v2.gecos.guadalinex.org/ubuntu/",|"http://v2.gecos.guadalinex.org/ubuntu/", "http://v3.gecos.guadalinex.org/ubuntu/",|' $GCCINI && \
     sed -i 's|"http://v2.gecos.guadalinex.org/mint/"|"http://v2.gecos.guadalinex.org/mint/", "http://v3.gecos.guadalinex.org/mint/"|' $GCCINI && \
+    echo "hecho."
+fi
+
+if [ `grep -c "$GECOS_VERSION" $GCCINI` -gt '0' ] ; then
+    echo -n "encontrada variable \$GECOS_VERSION --> cambiando... " && \
+    sed -i "s/\${GECOS_VERSION}/$GCC_VER/g" $GCCINI && \
+    echo "hecho."
+fi
+
+if [ x`rpm -qa chef` != x$CHEFCL ] ; then
+    echo "no encontrado cliente chef 13.5.3 --> instalando... " && \
+    rpm -Uvh $CHEFPK && \
     echo "hecho."
 fi
 
