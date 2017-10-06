@@ -52,7 +52,7 @@ fi
 
 if [ `grep -c "$GECOS_VERSION" $GCCINI` -gt '0' ] ; then
     echo -n "encontrada variable \$GECOS_VERSION --> cambiando... " && \
-    sed -i "s/\${GECOS_VERSION}/$GCC_VER/g" $GCCINI && \
+    sed -i "s/\${GECOS_VERSION}/$GCCVER/g" $GCCINI && \
     echo "hecho."
 fi
 
