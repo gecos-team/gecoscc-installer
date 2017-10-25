@@ -8,6 +8,7 @@ GCCINI="$GCCDIR/gecoscc.ini"
 GCCVER="2.2.0"
 CHEFPK="https://packages.chef.io/files/stable/chef/13.5.3/el/6/chef-13.5.3-1.el6.x86_64.rpm"
 CHEFCL="chef-13.5.3-1.el6.x86_64"
+NGINXC="/opt/nginx/etc/sites-enabled/gecoscc.conf"
 
 function processGecosccini() {
     echo -n "backing up $GCCINI on $GCCINI-$DATE.backup... "
@@ -46,10 +47,37 @@ function processGecosccini() {
         echo 'done.'
     fi
 
-    if [ `grep -c "$GECOS_VERSION" $GCCINI` -gt '0' ] ; then
+    if [ `grep -c "GECOS_VERSION" $GCCINI` -gt '0' ] ; then
         echo -n "found \$GECOS_VERSION variable --> changing... " && \
         sed -i "s/\${GECOS_VERSION}/$GCCVER/g" $GCCINI && \
         echo 'done.'
+    fi
+}
+
+function processNginxConf() {
+    if [ `grep -c proxy_http_version $NGINXC` -eq '0' ] ; then
+        echo -n "nginx has no proxy_http_version definition --> changing... " && \
+        sed -i '/proxy_pass http:\/\/@app;/a\\n      proxy_http_version 1.1;' $NGINXC
+        echo 'done.'
+    fi
+
+    if [ `grep -c 'listen 80;' $NGINXC` -eq '0' ] ; then
+        echo -n "nginx has no port 80 redirection --> changing... " && \
+        echo -e "server {\n      listen 80;\n      return 301 https://\$host:443\$request_uri;\n}" >> $NGINXC
+        echo 'done.'
+    fi
+    /etc/init.d/nginx restart
+}
+
+function updatePackagesLists() {
+    if [ -x $GCCDIR/bin/pmanage ] ; then
+        echo 'upgrading lists of packages...'
+        [ -f /opt/rh/python27/enable ] && source /opt/rh/python27/enable
+        [ -f $GCCDIR/bin/activate ]    && source $GCCDIR/bin/activate
+        $GCCDIR/bin/pmanage $GCCINI synchronize_repositories
+        echo 'done.'
+    else
+        echo "WARNING: packages list upgrade hasn't been done because there is no pmanage executable"
     fi
 }
 
@@ -66,20 +94,17 @@ else
     processGecosccini
 fi
 
+if [ ! -f $NGINXC ] ; then
+    echo "ERROR: $NGINXC not found"
+    exit 3
+else
+    processNginxConf
+fi
+
 if [ x`rpm -qa chef` != x$CHEFCL ] ; then
     echo "chef package not found, installing version 13.5.3 --> installing... " && \
     rpm -Uvh $CHEFPK && \
     echo 'done.'
-fi
-
-if [ -x $GCCDIR/bin/pmanage ] ; then
-    echo 'upgrading lists of packages...'
-    [ -f /opt/rh/python27/enable ] && source /opt/rh/python27/enable
-    [ -f $GCCDIR/bin/activate ]    && source $GCCDIR/bin/activate
-    $GCCDIR/bin/pmanage $GCCINI synchronize_repositories
-    echo 'done.'
-else
-    echo "WARNING: packages list upgrade hasn't been done because there is no pmanage executable"
 fi
 
 exit 0
