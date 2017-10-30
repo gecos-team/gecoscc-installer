@@ -169,7 +169,9 @@ if [ x`rpm -qa chef` != x$CHEFCL ] ; then
     echo 'done.'
 fi
 
-updatePackagesLists
+$SUPERV restart
+
+#updatePackagesLists
 
 exit 0
 
