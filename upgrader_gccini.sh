@@ -23,7 +23,6 @@ function updateGECOSCC() {
     sed -i 's|/opt/gecosccui-2.2.0|/opt/gecosccui-2.2.1|g' /opt/gecosccui-$NEWVER/bin/*
     sed -i 's|/opt/gecosccui-2.2.0|/opt/gecosccui-2.2.1|g' /opt/gecosccui-$NEWVER/gecoscc.ini
     sed -i 's|/opt/gecosccui-2.2.0|/opt/gecosccui-2.2.1|g' /opt/gecosccui-$NEWVER/supervisord.conf
-    #sed -i 's|/opt/gecosccui-2.2.0|/opt/gecosccui-2.2.1|g' /opt/gecosccui-$NEWVER/lib/python2.7/site-packages/setuptools.pth
 
     cd /tmp
     curl -s -L -O $GCC221
@@ -49,31 +48,37 @@ function updateGECOSCC() {
 }
 
 function processGecosccini() {
-    echo -n "backing up $GCCINI on $GCCINI-$DATE.backup... "
-    cp -f $GCCINI $GCCINI-$DATE.backup
+    local CHANGED='no'
+
+    echo -n "backing up $GCCINI on $GCCINI-$DATE... "
+    cp -f $GCCINI $GCCINI-$DATE
     echo 'done.'
 
     if [ `grep -c "http://forja.guadalinex.org/webs/gecos/doc/v2/doku.php" $GCCINI` -eq '1' ] ; then
         echo -n "found wrong help URL --> changing... " && \
         sed -i 's|^help_manual_url = http://forja.guadalinex.org/webs/gecos/doc/v2/doku.php|help_manual_url = https://github.com/gecos-team/gecos-doc/wiki/Politicas:|' $GCCINI && \
+        CHANGED='yes' && \
         echo 'done.'
     fi
 
     if [ `grep -c "^worker_class = gevent" $GCCINI` -eq '1' ] ; then
         echo -n "found wrong gevent definition --> changing... " && \
         sed -i 's/^worker_class = gevent/worker_class = gecoscc.socks.GecosGeventSocketIOWorker/' $GCCINI && \
+        CHANGED='yes' && \
         echo 'done.'
     fi
 
     if [ `grep -c "v2.gecos.guadalinex.org/gems" $GCCINI` -eq '1' ] ; then
         echo -n "found wrong gems repository --> changing... " && \
         sed -i 's|^firstboot_api.gem_repo = http://v2.gecos.guadalinex.org/gems|firstboot_api.gem_repo = http://v3.gecos.guadalinex.org/gems|' $GCCINI && \
+        CHANGED='yes' && \
         echo 'done.'
     fi
 
     if [ `grep -c "^timeout = 600" $GCCINI` -eq '1' ] ; then
         echo -n "found wrong timeout --> changing... " && \
         sed -i 's/^timeout = 600/timeout = 1800/' $GCCINI && \
+        CHANGED='yes' && \
         echo 'done.'
     fi
 
@@ -82,12 +87,20 @@ function processGecosccini() {
         sed -i 's|"http://v2.gecos.guadalinex.org/gecos/",|"http://v2.gecos.guadalinex.org/gecos/", "http://v3.gecos.guadalinex.org/gecos/",|' $GCCINI && \
         sed -i 's|"http://v2.gecos.guadalinex.org/ubuntu/",|"http://v2.gecos.guadalinex.org/ubuntu/", "http://v3.gecos.guadalinex.org/ubuntu/",|' $GCCINI && \
         sed -i 's|"http://v2.gecos.guadalinex.org/mint/"|"http://v2.gecos.guadalinex.org/mint/", "http://v3.gecos.guadalinex.org/mint/"|' $GCCINI && \
+        CHANGED='yes' && \
         echo 'done.'
     fi
 
     if [ `grep -c "GECOS_VERSION" $GCCINI` -gt '0' ] ; then
         echo -n "found \$GECOS_VERSION variable --> changing... " && \
         sed -i "s/\${GECOS_VERSION}/$GCCVER/g" $GCCINI && \
+        CHANGED='yes' && \
+        echo 'done.'
+    fi
+
+    if [ x$CHANGED = 'xno' ] ; then
+        echo -n "there had been no changes, deleting backup file... "
+        [ -f $GCCINI-$DATE ] && rm -f $GCCINI-$DATE
         echo 'done.'
     fi
 }
@@ -98,14 +111,6 @@ function processNginxConf() {
         sed -i '/proxy_pass http:\/\/@app;/a\\n      proxy_http_version 1.1;' $NGINXC
         echo 'done.'
         /etc/init.d/nginx restart
-    fi
-}
-
-function processSocksPy() {
-    if [ `grep -c 'HTTP_X_FORWARDED_PROTO' $PY_GCC/socks.py` -eq '0' ] ; then
-        echo -n 'download latest version of socks.py...'
-        curl -s -L -o $PY_GCC/socks.py $SOCKSP
-        echo 'done.'
     fi
 }
 
@@ -154,13 +159,6 @@ if [ ! -f $NGINXC ] ; then
     exit 1
 else
     processNginxConf
-fi
-
-if [ ! -f $PY_GCC/socks.py ] ; then
-    echo "ERROR: $PY_GCC/socks.py not found"
-    exit 1
-else
-    processSocksPy
 fi
 
 if [ x`rpm -qa chef` != x$CHEFCL ] ; then
