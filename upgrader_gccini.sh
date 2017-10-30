@@ -2,13 +2,51 @@
 
 PATH="/bin:/usr/bin:/sbin:/usr/sbin"
 LANG="C"
-DATE=`date +%Y%m%d%H%M`
-GCCDIR="/opt/gecosccui-2.2.0"
-GCCINI="$GCCDIR/gecoscc.ini"
-GCCVER="2.2.0"
+DATE=`date +%Y%m%d%H%M%S`
+SUPERV="/etc/init.d/supervisord"
+GCC221="https://github.com/gecos-team/gecoscc-ui/archive/2.2.1.tar.gz"
+NGINXC="/opt/nginx/etc/sites-enabled/gecoscc.conf"
+SOCKSP="https://raw.githubusercontent.com/n1mh/gecoscc-ui/fix_https_nginx/gecoscc/socks.py"
 CHEFPK="https://packages.chef.io/files/stable/chef/13.5.3/el/6/chef-13.5.3-1.el6.x86_64.rpm"
 CHEFCL="chef-13.5.3-1.el6.x86_64"
-NGINXC="/opt/nginx/etc/sites-enabled/gecoscc.conf"
+
+function updateGECOSCC() {
+    echo "found outdated version of GECOSCC --> updating... "
+
+    $SUPERV stop
+
+    local OLDVER="2.2.0"
+    local NEWVER="2.2.1"
+
+    cp -r /opt/gecosccui-$OLDVER /opt/gecosccui-$NEWVER
+    sed -i 's|/opt/gecosccui-2.2.0|/opt/gecosccui-2.2.1|g' $SUPERV
+    sed -i 's|/opt/gecosccui-2.2.0|/opt/gecosccui-2.2.1|g' /opt/gecosccui-$NEWVER/bin/*
+    sed -i 's|/opt/gecosccui-2.2.0|/opt/gecosccui-2.2.1|g' /opt/gecosccui-$NEWVER/gecoscc.ini
+    sed -i 's|/opt/gecosccui-2.2.0|/opt/gecosccui-2.2.1|g' /opt/gecosccui-$NEWVER/supervisord.conf
+    #sed -i 's|/opt/gecosccui-2.2.0|/opt/gecosccui-2.2.1|g' /opt/gecosccui-$NEWVER/lib/python2.7/site-packages/setuptools.pth
+
+    cd /tmp
+    curl -s -L -O $GCC221
+    mkdir -p /tmp/$DATE
+    tar xfz 2.2.1.tar.gz -C /tmp/$DATE
+
+    source /opt/rh/python27/enable 
+    source /opt/gecosccui-$NEWVER/bin/activate
+
+    cd /tmp/$DATE/gecoscc-ui-2.2.1
+    python setup.py build
+    python setup.py install
+    easy_install dist/gecoscc-2.2.1-py2.7.egg 
+    cd /opt/gecosccui-$NEWVER/lib/python2.7/site-packages/gecoscc-2.2.1-py2.7.egg
+    cp -r * /opt/gecosccui-$NEWVER/lib/python2.7/site-packages/
+    chown -R gecoscc:gecoscc /opt/gecosccui-$NEWVER/sessions 
+    chown -R gecoscc:gecoscc /opt/gecosccui-$NEWVER/supervisor
+    chown -R gecoscc:gecoscc /opt/gecosccui-$NEWVER/supervisord.conf
+
+    $SUPERV start
+
+    echo 'done.'
+}
 
 function processGecosccini() {
     echo -n "backing up $GCCINI on $GCCINI-$DATE.backup... "
@@ -59,14 +97,16 @@ function processNginxConf() {
         echo -n "nginx has no proxy_http_version definition --> changing... " && \
         sed -i '/proxy_pass http:\/\/@app;/a\\n      proxy_http_version 1.1;' $NGINXC
         echo 'done.'
+        /etc/init.d/nginx restart
     fi
+}
 
-    if [ `grep -c 'listen 80;' $NGINXC` -eq '0' ] ; then
-        echo -n "nginx has no port 80 redirection --> changing... " && \
-        echo -e "server {\n      listen 80;\n      return 301 https://\$host:443\$request_uri;\n}" >> $NGINXC
+function processSocksPy() {
+    if [ `grep -c 'HTTP_X_FORWARDED_PROTO' $PY_GCC/socks.py` -eq '0' ] ; then
+        echo -n 'download latest version of socks.py...'
+        curl -s -L -o $PY_GCC/socks.py $SOCKSP
         echo 'done.'
     fi
-    /etc/init.d/nginx restart
 }
 
 function updatePackagesLists() {
@@ -86,19 +126,41 @@ if [ ! $(id -u) = 0 ]; then
     exit 1
 fi
 
+if [ ! -f $SUPERV ] ; then
+    echo "ERROR: $SUPERV not found."
+    exit 1
+else
+    CURVER=`grep '^EXECUTE=' $SUPERV | cut -d/ -f3 | cut -d- -f2`
+    if [ $CURVER != '2.2.1' ] ; then
+        updateGECOSCC
+    fi
+fi
+
+GCCVER='2.2.1'
+GCCDIR="/opt/gecosccui-$GCCVER"
+GCCINI="$GCCDIR/gecoscc.ini"
+PY_GCC="$GCCDIR/lib/python2.7/site-packages/gecoscc"
+
 if [ ! -f $GCCINI ] ; then
     echo "ERROR: $GCCINI not found"
     echo 'Is this a real GECOSCC server?'
-    exit 2
+    exit 1
 else
     processGecosccini
 fi
 
 if [ ! -f $NGINXC ] ; then
     echo "ERROR: $NGINXC not found"
-    exit 3
+    exit 1
 else
     processNginxConf
+fi
+
+if [ ! -f $PY_GCC/socks.py ] ; then
+    echo "ERROR: $PY_GCC/socks.py not found"
+    exit 1
+else
+    processSocksPy
 fi
 
 if [ x`rpm -qa chef` != x$CHEFCL ] ; then
@@ -107,4 +169,7 @@ if [ x`rpm -qa chef` != x$CHEFCL ] ; then
     echo 'done.'
 fi
 
+updatePackagesLists
+
 exit 0
+
