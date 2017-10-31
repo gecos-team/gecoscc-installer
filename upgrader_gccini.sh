@@ -3,6 +3,7 @@
 PATH="/bin:/usr/bin:/sbin:/usr/sbin"
 LANG="C"
 DATE=`date +%Y%m%d%H%M%S`
+PWD=`pwd`
 SUPERV="/etc/init.d/supervisord"
 GCC221="https://github.com/gecos-team/gecoscc-ui/archive/2.2.1.tar.gz"
 NGINXC="/opt/nginx/etc/sites-enabled/gecoscc.conf"
@@ -116,10 +117,12 @@ function processNginxConf() {
 
 function updatePackagesLists() {
     if [ -x $GCCDIR/bin/pmanage ] ; then
+        local LOG="$PWD/`date +%Y%m%d`_packages_list_upgrade.log"
         echo 'upgrading lists of packages...'
         [ -f /opt/rh/python27/enable ] && source /opt/rh/python27/enable
         [ -f $GCCDIR/bin/activate ]    && source $GCCDIR/bin/activate
-        $GCCDIR/bin/pmanage $GCCINI synchronize_repositories
+        echo "a file called $LOG will contain all the output from this process"
+        $GCCDIR/bin/pmanage $GCCINI synchronize_repositories >> $LOG 2>&1
         echo 'done.'
     else
         echo "WARNING: packages list upgrade hasn't been done because there is no pmanage executable"
@@ -167,9 +170,10 @@ if [ x`rpm -qa chef` != x$CHEFCL ] ; then
     echo 'done.'
 fi
 
+echo 'restarting GECOSCC to apply changes...'
 $SUPERV restart
+echo 'done.'
 
-#updatePackagesLists
+updatePackagesLists
 
 exit 0
-
