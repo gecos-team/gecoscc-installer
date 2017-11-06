@@ -236,7 +236,7 @@ fi
 
 echo "Installing python2.7 on $OS_SYS"
 
-if [ `rpm -q python27-python-devel-2.7.8-18.el6 | wc -l` -ne '1' ] ; then
+if ! rpm -q python27-python-devel-2.7.8-18.el6 ; then
     yum install -y \
         http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-1.1-25.el6.x86_64.rpm                    \
         http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-2.7.8-18.el6.x86_64.rpm           \
