@@ -235,7 +235,17 @@ else
 fi
 
 echo "Installing python2.7 on $OS_SYS"
-install_package python27
+
+if ! rpm -q python27-python-devel-2.7.8-18.el6 ; then
+    yum install -y \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-1.1-25.el6.x86_64.rpm                    \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-2.7.8-18.el6.x86_64.rpm           \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-pip-8.1.2-1.el6.noarch.rpm        \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-libs-2.7.8-18.el6.x86_64.rpm      \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-devel-2.7.8-18.el6.x86_64.rpm     \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-setuptools-0.9.8-4.el6.noarch.rpm
+fi
+
 source /opt/rh/python27/enable
 
 echo "Updating pip"
@@ -375,8 +385,8 @@ syntax_check_cache_path  '/root/.chef/syntax_check_cache'
 cookbook_path            '/tmp/cookbooks/'
 EOF
 # Using chef client knife instead of chef server embedded one. This one shows an json deep nesting error with our cookbook.
-/usr/bin/knife ssl fetch -c /tmp/knife.rb
-/usr/bin/knife cookbook upload -c /tmp/knife.rb -a
+/opt/opscode/bin/knife ssl fetch -c /tmp/knife.rb
+/opt/opscode/bin/knife cookbook upload -c /tmp/knife.rb -a
 
 
 if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
