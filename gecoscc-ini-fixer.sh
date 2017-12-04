@@ -140,6 +140,24 @@ else
     CURVER=`grep '^EXECUTE=' $SUPERV | cut -d/ -f3 | cut -d- -f2`
     if [ $CURVER != '2.2.1' ] ; then
         updateGECOSCC
+    else
+        echo -n "Right version of gecoscc-ui has been detected. Do you want to overwrite it? (y/N): "
+        read OVERWR
+
+        if [ x"$OVERWR" = 'xy' ] ; then
+            echo "Overwriting gecoscc-ui... "
+            $SUPERV stop
+            sed -i 's/2.2.1/2.2.0/g' $SUPERV
+            mv /opt/gecosccui-$CURVER /opt/gecosccui-$CURVER-$DATE
+            echo "done."
+            echo "Former directory has been moved to /opt/gecosccui-$CURVER-$DATE"
+            echo -n "Now will go through updating process. Press enter to continue... "
+            read
+
+            updateGECOSCC
+        else
+            echo "Doing nothing."
+        fi
     fi
 fi
 
