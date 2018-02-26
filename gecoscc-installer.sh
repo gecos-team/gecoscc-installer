@@ -274,10 +274,13 @@ chkconfig supervisord on
  gecoscc
 [ ! -d /opt/gecosccui-$GECOSCC_VERSION/sessions ] && \
  mkdir -p /opt/gecosccui-$GECOSCC_VERSION/sessions
+[ ! -d /opt/gecosccui-$GECOSCC_VERSION/.chef ] && \
+ mkdir -p /opt/gecosccui-$GECOSCC_VERSION/.chef
 [ ! -d /opt/gecoscc/media/users ] && \
  mkdir -p /opt/gecoscc/media/users
 chown -R gecoscc:gecoscc /opt/gecoscc
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/sessions/
+chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/.chef
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisor/
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisord.conf
 
