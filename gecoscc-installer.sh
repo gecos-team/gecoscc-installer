@@ -279,10 +279,7 @@ chkconfig supervisord on
 [ ! -d /opt/gecoscc/media/users ] && \
  mkdir -p /opt/gecoscc/media/users
 chown -R gecoscc:gecoscc /opt/gecoscc
-chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/sessions/
-chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/.chef
-chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisor/
-chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisord.conf
+chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/
 
 install_package redis
 chkconfig --level 3 redis on
