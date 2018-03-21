@@ -20,15 +20,15 @@ export ORGANIZATION="Your Organization"
 export ADMIN_USER_NAME="superuser"
 export ADMIN_EMAIL="gecos@guadalinex.org"
 
-export GECOS_CC_SERVER_IP=`echo $HOSTNAME| tr '[:upper:]' '[:lower:]'`
-export CHEF_SERVER_IP=`echo $HOSTNAME | tr '[:upper:]' '[:lower:]'`
+export GECOS_CC_SERVER=`echo $HOSTNAME| tr '[:upper:]' '[:lower:]'`
+export CHEF_SERVER=`echo $HOSTNAME | tr '[:upper:]' '[:lower:]'`
 
 export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
 export CHEF_SERVER_VERSION="12.16.9"
 export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-core-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
 export CHEF_CLIENT_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
-export CHEF_SERVER_URL="https://$CHEF_SERVER_IP/"
+export CHEF_SERVER_URL="https://$CHEF_SERVER/"
 export CHEF_SUPERADMIN_USER="pivotal"
 export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
 
