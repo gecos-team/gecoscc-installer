@@ -278,6 +278,8 @@ chkconfig supervisord on
  mkdir -p /opt/gecosccui-$GECOSCC_VERSION/.chef
 [ ! -d /opt/gecoscc/media/users ] && \
  mkdir -p /opt/gecoscc/media/users
+[ ! -d /opt/gecoscc/updates ] && \
+ mkdir -p /opt/gecoscc/updates
 chown -R gecoscc:gecoscc /opt/gecoscc
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/
 
