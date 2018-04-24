@@ -238,6 +238,9 @@ echo "Installing python2.7 on $OS_SYS"
 install_package python27
 source /opt/rh/python27/enable
 
+echo "Installing lsof tool"
+install_package lsof
+
 echo "Updating pip"
 pip install --upgrade pip
 echo "Updating virtualenv"
@@ -268,10 +271,7 @@ chkconfig supervisord on
 
 
 [ ! `id -u gecoscc 2> /dev/null` ] && \
- adduser -d /opt/gecosccui-$GECOSCC_VERSION \
- -r \
- -s /bin/false \
- gecoscc
+ adduser -d /opt/gecosccui-$GECOSCC_VERSION  -r  -s /bin/false gecoscc
 [ ! -d /opt/gecosccui-$GECOSCC_VERSION/sessions ] && \
  mkdir -p /opt/gecosccui-$GECOSCC_VERSION/sessions
 [ ! -d /opt/gecosccui-$GECOSCC_VERSION/.chef ] && \
@@ -280,11 +280,19 @@ chkconfig supervisord on
  mkdir -p /opt/gecoscc/media/users
 [ ! -d /opt/gecoscc/updates ] && \
  mkdir -p /opt/gecoscc/updates
+[ ! -d /opt/gecoscc/scripts ] && \
+ mkdir -p /opt/gecoscc/scripts
+cp -r /opt/gecosccui-$GECOSCC_VERSION/lib64/python2.7/site-packages/gecoscc/scripts/*  /opt/gecoscc/scripts/
 chown -R gecoscc:gecoscc /opt/gecoscc
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/
 
 install_package redis
 chkconfig --level 3 redis on
+
+# installing components to allow a chef data remote backup 
+install_package rh-ruby24-ruby
+source /opt/rh/rh-ruby24/enable
+gem install knife-backup
 
 # fixing gevent-socketio error
 sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
