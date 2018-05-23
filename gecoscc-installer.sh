@@ -35,11 +35,11 @@ export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
 export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
-export GECOSCC_VERSION='2.2.0'
-export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.5.0.zip"
+export GECOSCC_VERSION='2.3.0'
+export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.6.0.zip"
 export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/1.10.0.zip"
 export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip"
-export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.2.0/templates/"
+export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.3.0/templates/"
 
 export NGINX_VERSION='1.4.3'
 
@@ -289,10 +289,13 @@ chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/
 install_package redis
 chkconfig --level 3 redis on
 
-# installing components to allow a chef data remote backup 
-install_package rh-ruby24-ruby
-source /opt/rh/rh-ruby24/enable
+# installing tools for chef management from web frontend (backup/restore) 
+echo "Installing chef client package"
+yum localinstall -y $CHEF_CLIENT_PACKAGE_URL
+install_package gcc
+install_package rh-postgresql96-postgresql-devel.x86_64 # Check PostgreSQL version in Chef Server (with embedded pg_config)
 gem install knife-backup
+/opt/chef/embedded/bin/gem install knife-ec-backup -- --with-pg-config=/opt/rh/rh-postgresql96/root/usr/bin/pg_config
 
 # fixing gevent-socketio error
 sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
@@ -353,9 +356,6 @@ POLICIES)
 
 echo "Installing required unzip package"
 install_package unzip
-echo "Installing chef client package"
-yum localinstall -y $CHEF_CLIENT_PACKAGE_URL
-echo "Uploading policies to CHEF"
 echo "Downloading GECOS policies"
 curl -L $GECOSCC_POLICIES_URL > /tmp/policies.zip
 curl -L $GECOSCC_OHAI_URL > /tmp/ohai.zip
@@ -386,6 +386,7 @@ cookbook_path            '/tmp/cookbooks/'
 EOF
 # Using chef client knife instead of chef server embedded one. This one shows an json deep nesting error with our cookbook.
 /usr/bin/knife ssl fetch -c /tmp/knife.rb
+echo "Uploading policies to CHEF"
 /usr/bin/knife cookbook upload -c /tmp/knife.rb -a
 
 
