@@ -7,7 +7,7 @@
 
 # Monitoring parameters
 server_name = ${HOSTNAME}
-server_ip = ${GECOS_CC_SERVER_IP}
+server_ip = ${GECOS_CC_SERVER}
 
 # This pattern must be http[s]://<user>:<password>@%s:<port>/RPC2
 # Internally %s will be replaced by server IP
@@ -30,6 +30,8 @@ pyramid.locales = ["en", "es"]
 jinja2.directories = gecoscc:templates
 jinja2.filters =
     admin_jsonify = gecoscc.filters.admin_serialize
+    datetime = gecoscc.filters.datetime
+    regex_match = gecoscc.filters.regex_match
 
 mongo_uri = ${MONGO_URL}
 
@@ -80,16 +82,28 @@ software_profiles =
     "Remote Support": ["xrdp", "x11vnc"]
     }
 
-mimetypes = [ "image/jpeg", "image/png" ]
+mimetypes = [ "image/jpeg", "image/png", "application/pdf", "application/zip", "application/rar", "video/mp4" ]
 
-# Cookbook upload config
-# The gecoscc user must have permissions 
-cookbook_upload_rootdir = /opt/gecoscc/media/users
-cmd_upload = /opt/chef/bin/knife cookbook upload %s -o %s -c %s
-cmd_import = /opt/gecosccui-${GECOS_VERSION}/bin/pmanage /opt/gecosccui-${GECOS_VERSION}/gecoscc.ini import_policies -a %s -k %s
-adminuser = superuser
-admincert = %(cookbook_upload_rootdir)s/%(adminuser)s/superuser.pem
-knifeconf = %(cookbook_upload_rootdir)s/%(adminuser)s/knife.rb
+
+# Updates
+# Add trailing slash when is a directory
+updates.dir = /opt/gecoscc/updates/
+updates.tmp = /tmp/
+updates.log = %(updates.dir)s/{0}/update.log
+updates.control = %(updates.dir)s/{0}/control
+updates.scripts = %(updates.dir)s/{0}/scripts/
+updates.cookbook = %(updates.dir)s/{0}/cookbook/
+updates.backups = %(updates.dir)s/{0}/backups/
+updates.rollback = %(updates.dir)s/{0}/rollback.log
+updates.chef_backup = /opt/gecoscc/scripts/chef_backup.sh
+updates.chef_restore = /opt/gecoscc/scripts/chef_restore.sh
+config_uri  = %(here)s/gecoscc.ini
+
+# Idle time (seconds)
+# On maintenance mode, this parameter filters active users
+idle_time = 900
+
+
 
 [pipeline:main]
 pipeline =

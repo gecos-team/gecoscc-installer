@@ -20,26 +20,26 @@ export ORGANIZATION="Your Organization"
 export ADMIN_USER_NAME="superuser"
 export ADMIN_EMAIL="gecos@guadalinex.org"
 
-export GECOS_CC_SERVER_IP=`echo $HOSTNAME| tr '[:upper:]' '[:lower:]'`
-export CHEF_SERVER_IP=`echo $HOSTNAME | tr '[:upper:]' '[:lower:]'`
+export GECOS_CC_SERVER=`echo $HOSTNAME| tr '[:upper:]' '[:lower:]'`
+export CHEF_SERVER=`echo $HOSTNAME | tr '[:upper:]' '[:lower:]'`
 
 export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
 export CHEF_SERVER_VERSION="12.16.9"
 export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-server-core-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
 export CHEF_CLIENT_PACKAGE_URL="https://packages.chef.io/stable/el/6/chef-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
-export CHEF_SERVER_URL="https://$CHEF_SERVER_IP/"
+export CHEF_SERVER_URL="https://$CHEF_SERVER/"
 export CHEF_SUPERADMIN_USER="pivotal"
 export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
 
 export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
-export GECOSCC_VERSION='2.2.2'
-export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/hotfix-0.5.4.zip"
+export GECOSCC_VERSION='2.3.0'
+export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.6.0.zip"
 export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/1.10.0.zip"
 export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip"
-export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.2.0/templates/"
+export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.3.0/templates/"
 
 export NGINX_VERSION='1.4.3'
 
@@ -248,6 +248,9 @@ fi
 
 source /opt/rh/python27/enable
 
+echo "Installing lsof tool"
+install_package lsof
+
 echo "Updating pip"
 pip install --upgrade pip
 echo "Updating virtualenv"
@@ -278,21 +281,31 @@ chkconfig supervisord on
 
 
 [ ! `id -u gecoscc 2> /dev/null` ] && \
- adduser -d /opt/gecosccui-$GECOSCC_VERSION \
- -r \
- -s /bin/false \
- gecoscc
+ adduser -d /opt/gecosccui-$GECOSCC_VERSION  -r  -s /bin/false gecoscc
 [ ! -d /opt/gecosccui-$GECOSCC_VERSION/sessions ] && \
  mkdir -p /opt/gecosccui-$GECOSCC_VERSION/sessions
+[ ! -d /opt/gecosccui-$GECOSCC_VERSION/.chef ] && \
+ mkdir -p /opt/gecosccui-$GECOSCC_VERSION/.chef
 [ ! -d /opt/gecoscc/media/users ] && \
  mkdir -p /opt/gecoscc/media/users
+[ ! -d /opt/gecoscc/updates ] && \
+ mkdir -p /opt/gecoscc/updates
+[ ! -d /opt/gecoscc/scripts ] && \
+ mkdir -p /opt/gecoscc/scripts
+cp -r /opt/gecosccui-$GECOSCC_VERSION/lib64/python2.7/site-packages/gecoscc/scripts/*  /opt/gecoscc/scripts/
 chown -R gecoscc:gecoscc /opt/gecoscc
-chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/sessions/
-chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisor/
-chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/supervisord.conf
+chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/
 
 install_package redis
 chkconfig --level 3 redis on
+
+# installing tools for chef management from web frontend (backup/restore) 
+echo "Installing chef client package"
+yum localinstall -y $CHEF_CLIENT_PACKAGE_URL
+install_package gcc
+install_package rh-postgresql96-postgresql-devel.x86_64 # Check PostgreSQL version in Chef Server (with embedded pg_config)
+gem install knife-backup
+/opt/chef/embedded/bin/gem install knife-ec-backup -- --with-pg-config=/opt/rh/rh-postgresql96/root/usr/bin/pg_config
 
 # fixing gevent-socketio error
 sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
@@ -353,9 +366,6 @@ POLICIES)
 
 echo "Installing required unzip package"
 install_package unzip
-echo "Installing chef client package"
-yum localinstall -y $CHEF_CLIENT_PACKAGE_URL
-echo "Uploading policies to CHEF"
 echo "Downloading GECOS policies"
 curl -L $GECOSCC_POLICIES_URL > /tmp/policies.zip
 curl -L $GECOSCC_OHAI_URL > /tmp/ohai.zip
@@ -385,8 +395,10 @@ syntax_check_cache_path  '/root/.chef/syntax_check_cache'
 cookbook_path            '/tmp/cookbooks/'
 EOF
 # Using chef client knife instead of chef server embedded one. This one shows an json deep nesting error with our cookbook.
+echo "Uploading policies to CHEF"
 /opt/opscode/bin/knife ssl fetch -c /tmp/knife.rb
 /opt/opscode/bin/knife cookbook upload -c /tmp/knife.rb -a
+/usr/bin/knife cookbook upload -c /tmp/knife.rb -a
 
 
 if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
