@@ -130,7 +130,7 @@ function install_scl_in_redhat {
     install_package centos-release-scl
 
     yum-config-manager --add-repo \
-        https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development/templates/scl.repo
+        $TEMPLATES_URL/scl.repo
 }
 
 # Checking if python 2.7 is installed
