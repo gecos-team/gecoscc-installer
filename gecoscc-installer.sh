@@ -304,7 +304,6 @@ echo "Installing chef client package"
 yum localinstall -y $CHEF_CLIENT_PACKAGE_URL
 install_package gcc
 install_package rh-postgresql96-postgresql-devel.x86_64 # Check PostgreSQL version in Chef Server (with embedded pg_config)
-gem install knife-backup
 /opt/chef/embedded/bin/gem install knife-ec-backup -- --with-pg-config=/opt/rh/rh-postgresql96/root/usr/bin/pg_config
 
 # fixing gevent-socketio error
