@@ -279,7 +279,7 @@ mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/run
 mkdir -p /opt/gecosccui-$GECOSCC_VERSION/supervisor/log
 chkconfig supervisord on
 
-
+echo "Configuring user (gecoscc) and directory permissions"
 [ ! `id -u gecoscc 2> /dev/null` ] && \
  adduser -d /opt/gecosccui-$GECOSCC_VERSION  -r  -s /bin/false gecoscc
 [ ! -d /opt/gecosccui-$GECOSCC_VERSION/sessions ] && \
@@ -295,6 +295,8 @@ chkconfig supervisord on
 cp -r /opt/gecosccui-$GECOSCC_VERSION/lib64/python2.7/site-packages/gecoscc/scripts/*  /opt/gecoscc/scripts/
 chown -R gecoscc:gecoscc /opt/gecoscc
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/
+chmod -t /tmp
+
 
 install_package redis
 chkconfig --level 3 redis on
