@@ -150,8 +150,8 @@ OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "Choose an 
 "USER" "Create Control Center Superuser." \
 "SET_SUPERUSER" "Set Control Center Superuser as Chef Superuser." \
 "POLICIES" "Update Control Center Policies." \
-"PRINTERS" "Update Printers Models Catalog" \
-"PACKAGES" "Update Software Packages Catalog" 3>&1 1>&2 2>&3 )
+"PRINTERS" "Update Printers Models Catalog." \
+"PACKAGES" "Update Software Packages Catalog." 3>&1 1>&2 2>&3 )
 
 
 case $OPTION in
@@ -395,6 +395,9 @@ echo "Uploading policies to CHEF"
 if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
     echo "Uploading policies to Control Center"
     /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini import_policies -a $CHEF_SUPERADMIN_USER -k $CHEF_SUPERADMIN_CERTIFICATE
+    echo ""
+    echo "Uploading Broadband Service Providers"
+    /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini mobile_broadband_providers -a $CHEF_SUPERADMIN_USER -k $CHEF_SUPERADMIN_CERTIFICATE
 fi
 
 ;;
