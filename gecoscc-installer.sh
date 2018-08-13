@@ -376,6 +376,8 @@ download_cookbook windows 1.38.2
 download_cookbook chef_handler 1.2.0
 download_cookbook logrotate 1.9.2
 download_cookbook cron 1.7.0
+download_cookbook compat_resource 12.19.1
+
 
 cat > /tmp/knife.rb << EOF
 log_level                :info
