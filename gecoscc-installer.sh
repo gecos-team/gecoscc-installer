@@ -45,7 +45,8 @@ export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-insta
 export NGINX_VERSION='1.4.3'
 
 export RUBY_GEMS_REPOSITORY_URL="https://rubygems.org"
-export HELP_URL="https://github.com/gecos-team/gecos-doc/wiki/Politicas:"
+export HELP_BASE_URL="https://github.com/gecos-team/gecos-doc/wiki"
+export HELP_POLICY_URL="https://github.com/gecos-team/gecos-doc/wiki/Politicas:"
 
 
 # FUNCTIONS
