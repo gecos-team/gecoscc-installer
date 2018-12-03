@@ -36,11 +36,11 @@ export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
 export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
-export GECOSCC_VERSION='2.3.0'
-export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.6.0.zip"
-export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/1.10.0.zip"
+export GECOSCC_VERSION='2.4.0'
+export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.7.2.zip"
+export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/2.0.1.zip"
 export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip"
-export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.3.0/templates/"
+export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.4.0/templates/"
 
 export NGINX_VERSION='1.4.3'
 
@@ -131,8 +131,7 @@ function install_scl_in_redhat {
         https://copr.fedoraproject.org/coprs/rhscl/centos-release-scl/repo/epel-6/rhscl-centos-release-scl-epel-6.repo
     install_package centos-release-scl
 
-    yum-config-manager --add-repo \
-        https://raw.githubusercontent.com/gecos-team/gecoscc-installer/development/templates/scl.repo
+    yum-config-manager --add-repo $TEMPLATES_URL/scl.repo
 }
 
 # Checking if python 2.7 is installed
@@ -238,6 +237,16 @@ fi
 
 echo "Installing python2.7 on $OS_SYS"
 install_package python27
+if ! rpm -q python27-python-devel-2.7.8-18.el6 ; then
+    yum install -y \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-1.1-25.el6.x86_64.rpm                    \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-2.7.8-18.el6.x86_64.rpm           \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-pip-8.1.2-1.el6.noarch.rpm        \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-libs-2.7.8-18.el6.x86_64.rpm      \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-devel-2.7.8-18.el6.x86_64.rpm     \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-setuptools-0.9.8-4.el6.noarch.rpm
+fi
+
 source /opt/rh/python27/enable
 
 echo "Installing lsof tool"
@@ -390,10 +399,10 @@ chef_server_url          '$CHEF_SERVER_URL'
 syntax_check_cache_path  '/root/.chef/syntax_check_cache'
 cookbook_path            '/tmp/cookbooks/'
 EOF
-# Using chef client knife instead of chef server embedded one. This one shows an json deep nesting error with our cookbook.
-/usr/bin/knife ssl fetch -c /tmp/knife.rb
 echo "Uploading policies to CHEF"
-/usr/bin/knife cookbook upload -c /tmp/knife.rb -a
+/opt/opscode/bin/knife ssl fetch -c /tmp/knife.rb
+/opt/opscode/bin/knife cookbook upload -c /tmp/knife.rb -a
+#/usr/bin/knife cookbook upload -c /tmp/knife.rb -a
 
 
 if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
