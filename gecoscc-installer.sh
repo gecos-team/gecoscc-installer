@@ -26,8 +26,9 @@ export CHEF_SERVER=`echo $HOSTNAME | tr '[:upper:]' '[:lower:]'`
 export MONGO_URL="mongodb://localhost:27017/gecoscc"
 
 export CHEF_SERVER_VERSION="12.16.9"
+export CHEF_CLIENT_VERSION="12.22.5"
 export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/files/stable/chef-server/$CHEF_SERVER_VERSION/el/6/chef-server-core-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
-export CHEF_CLIENT_PACKAGE_URL="https://packages.chef.io/files/stable/chef-server/$CHEF_SERVER_VERSION/el/6/chef-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
+export CHEF_CLIENT_PACKAGE_URL="https://packages.chef.io/files/stable/chef-server/$CHEF_CLIENT_VERSION/el/6/chef-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
 export CHEF_SERVER_URL="https://$CHEF_SERVER/"
 export CHEF_SUPERADMIN_USER="pivotal"
 export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
@@ -35,16 +36,17 @@ export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
 export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
-export GECOSCC_VERSION='2.3.0'
-export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.6.0.zip"
-export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/1.10.0.zip"
+export GECOSCC_VERSION='2.4.0'
+export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.7.3.zip"
+export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/1.11.0.zip"
 export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip"
-export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.3.0/templates/"
+export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.4.0/templates/"
 
 export NGINX_VERSION='1.4.3'
 
 export RUBY_GEMS_REPOSITORY_URL="https://rubygems.org"
-export HELP_URL="https://github.com/gecos-team/gecos-doc/wiki/Politicas:"
+export HELP_BASE_URL="https://github.com/gecos-team/gecos-doc/wiki"
+export HELP_POLICY_URL="https://github.com/gecos-team/gecos-doc/wiki/Politicas:"
 
 
 # FUNCTIONS
@@ -129,8 +131,7 @@ function install_scl_in_redhat {
         https://copr.fedoraproject.org/coprs/rhscl/centos-release-scl/repo/epel-6/rhscl-centos-release-scl-epel-6.repo
     install_package centos-release-scl
 
-    yum-config-manager --add-repo \
-        $TEMPLATES_URL/scl.repo
+    yum-config-manager --add-repo $TEMPLATES_URL/scl.repo
 }
 
 # Checking if python 2.7 is installed
@@ -150,8 +151,8 @@ OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "Choose an 
 "USER" "Create Control Center Superuser." \
 "SET_SUPERUSER" "Set Control Center Superuser as Chef Superuser." \
 "POLICIES" "Update Control Center Policies." \
-"PRINTERS" "Update Printers Models Catalog" \
-"PACKAGES" "Update Software Packages Catalog" 3>&1 1>&2 2>&3 )
+"PRINTERS" "Update Printers Models Catalog." \
+"PACKAGES" "Update Software Packages Catalog." 3>&1 1>&2 2>&3 )
 
 
 case $OPTION in
@@ -236,6 +237,7 @@ fi
 
 echo "Installing python2.7 on $OS_SYS"
 
+#install_package python27
 if ! rpm -q python27-python-devel-2.7.8-18.el6 ; then
     yum install -y \
         http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-1.1-25.el6.x86_64.rpm                    \
@@ -385,6 +387,8 @@ download_cookbook windows 1.38.2
 download_cookbook chef_handler 1.2.0
 download_cookbook logrotate 1.9.2
 download_cookbook cron 1.7.0
+download_cookbook compat_resource 12.19.1
+
 
 cat > /tmp/knife.rb << EOF
 log_level                :info
@@ -395,16 +399,20 @@ chef_server_url          '$CHEF_SERVER_URL'
 syntax_check_cache_path  '/root/.chef/syntax_check_cache'
 cookbook_path            '/tmp/cookbooks/'
 EOF
+
 # Using chef client knife instead of chef server embedded one. This one shows an json deep nesting error with our cookbook.
 echo "Uploading policies to CHEF"
 /opt/opscode/bin/knife ssl fetch -c /tmp/knife.rb
 /opt/opscode/bin/knife cookbook upload -c /tmp/knife.rb -a
-/usr/bin/knife cookbook upload -c /tmp/knife.rb -a
+#/usr/bin/knife cookbook upload -c /tmp/knife.rb -a
 
 
 if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
     echo "Uploading policies to Control Center"
     /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini import_policies -a $CHEF_SUPERADMIN_USER -k $CHEF_SUPERADMIN_CERTIFICATE
+    echo ""
+    echo "Uploading Broadband Service Providers"
+    /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage /opt/gecosccui-$GECOSCC_VERSION/gecoscc.ini mobile_broadband_providers -a $CHEF_SUPERADMIN_USER -k $CHEF_SUPERADMIN_CERTIFICATE
 fi
 
 ;;
