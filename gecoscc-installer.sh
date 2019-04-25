@@ -28,7 +28,7 @@ export MONGO_URL="mongodb://localhost:27017/gecoscc"
 export CHEF_SERVER_VERSION="12.16.9"
 export CHEF_CLIENT_VERSION="12.22.5"
 export CHEF_SERVER_PACKAGE_URL="https://packages.chef.io/files/stable/chef-server/$CHEF_SERVER_VERSION/el/6/chef-server-core-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
-export CHEF_CLIENT_PACKAGE_URL="https://packages.chef.io/files/stable/chef-server/$CHEF_CLIENT_VERSION/el/6/chef-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
+export CHEF_CLIENT_PACKAGE_URL="https://packages.chef.io/files/stable/chef/$CHEF_CLIENT_VERSION/el/6/chef-$CHEF_SERVER_VERSION-1.el6.x86_64.rpm"
 export CHEF_SERVER_URL="https://$CHEF_SERVER/"
 export CHEF_SUPERADMIN_USER="pivotal"
 export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
@@ -36,11 +36,11 @@ export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
 export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
-export GECOSCC_VERSION='2.4.0'
-export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.7.3.zip"
-export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/1.11.0.zip"
+export GECOSCC_VERSION='2.5.0'
+export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.9.0.zip"
+export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/2.0.1.zip"
 export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip"
-export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.4.0/templates/"
+export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.5.0/templates/"
 
 export NGINX_VERSION='1.4.3'
 
