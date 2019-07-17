@@ -2,9 +2,15 @@ FROM python:2.7.9
 
 ARG GECOSCC_VERSION=2.5.0 
 ARG GECOSCC_LANG=es_ES.UTF-8
+ARG DISTRIBUTION=jessie
+ARG CHEF_CLIENT_URL=https://packages.chef.io/files/stable/chef/12.22.5/debian/8/chef_12.22.5-1_amd64.deb
 
-RUN printf "deb http://archive.debian.org/debian/ jessie main\ndeb-src http://archive.debian.org/debian/ jessie main\ndeb http://security.debian.org jessie/updates main\ndeb-src http://security.debian.org jessie/updates main" > /etc/apt/sources.list
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales lsof
+RUN printf "deb http://archive.debian.org/debian/ $DISTRIBUTION main\ndeb-src http://archive.debian.org/debian/ $DISTRIBUTION main\ndeb http://security.debian.org $DISTRIBUTION/updates main\ndeb-src http://security.debian.org $DISTRIBUTION/updates main" > /etc/apt/sources.list
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales lsof unzip wget  
+
+RUN wget $CHEF_CLIENT_URL -O /tmp/chef.deb
+RUN dpkg -i /tmp/chef.deb
+
 RUN sed -i -e 's/# es_ES.UTF-8/es_ES.UTF-8/' /etc/locale.gen && locale-gen
 ENV LANG $GECOSCC_LANG
 ENV LC_ALL $GECOSCC_LANG  

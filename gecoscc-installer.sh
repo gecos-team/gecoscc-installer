@@ -17,21 +17,42 @@ set +o nounset
 
 ADMIN_USER=superadmin
 ADMIN_EMAIL=test@test.com
-
-export CHEF_SERVER_VERSION="12.16.9"
+CHEF_SERVER_VERSION="12.16.9"
 
 
 # START: MAIN MENU
 
 OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "Choose an option" 16 78 10 \
-"CHEF" "Install Chef server" \
 "CC" "Install GECOS Control Center." \
-"USER" "Create Control Center First User." \
+"USER" "Create a GECOS Control Center User." \
+"CHEF" "Install Chef server" \
 "SET_SUPERUSER" "Set Control Center Superuser as Chef Superuser." \
 )
 
 
 case $OPTION in
+
+
+CC)
+echo "INSTALLING GECOS CONTROL CENTER"
+
+echo "Installing docker"
+apt install docker.io docker-compose
+systemctl start docker
+
+echo "Installing Control Center UI"
+docker-compose build
+# WARNING: If DNS resolution fails, you need to configure your DNS server properly in /etc/docker/daemon.json and then restart your Docker daemon. Please read: https://stackoverflow.com/questions/24991136/docker-build-could-not-resolve-archive-ubuntu-com-apt-get-fails-to-install-a/40516974#40516974
+
+echo "GECOS CONTROL CENTER INSTALLED"
+;;
+
+
+USER)
+echo "CREATING CONTROL CENTER USER"
+docker exec -ti web pmanage gecoscc.ini create_adminuser --username $ADMIN_USER --email $ADMIN_EMAIL --is-superuser
+;;
+
 
     
 CHEF)
@@ -65,26 +86,6 @@ CHEF)
 ;;
 
 
-
-CC)
-echo "INSTALLING GECOS CONTROL CENTER"
-
-
-echo "Installing docker"
-apt install docker.io docker-compose
-systemctl start docker
-docker-compose build
-# WARNING: If DNS resolution fails, you need to configure your DNS server properly in /etc/docker/daemon.json and then restart your Docker daemon. Please read: https://stackoverflow.com/questions/24991136/docker-build-could-not-resolve-archive-ubuntu-com-apt-get-fails-to-install-a/40516974#40516974
-
-echo "Installing GECOS Control Center UI"
-
-echo "GECOS CONTROL CENTER INSTALLED"
-;;
-
-USER)
-echo "CREATING CONTROL CENTER FIRST USER"
-docker exec -ti web pmanage gecoscc.ini create_adminuser --username $ADMIN_USER --email $ADMIN_EMAIL
-;;
 
 
 esac
