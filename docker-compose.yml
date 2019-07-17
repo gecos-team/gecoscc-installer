@@ -1,0 +1,71 @@
+version: '3'
+services:
+  nginx:
+    container_name: nginx
+    restart: always
+    build: ./nginx
+    ports:
+      - '80:80'
+    depends_on:
+      - web
+    volumes:
+      - 'log_volume:/logs'
+  redis:
+    container_name: redis
+    restart: always
+    build: ./redis
+    ports:
+      - '6379'
+  mongo:
+    container_name: mongo
+    restart: always
+    build: ./mongodb
+    ports:
+      - '27017'
+    volumes:
+      - 'db_volume:/data/db'
+  web: 
+    container_name: web
+    restart: 'no'
+    build: ./web
+    ports:
+      - '8010:8010'
+    volumes:
+      - 'data_volume:/opt/gecoscc' 
+      - 'log_volume:/logs'
+    depends_on:
+      - mongo
+      - redis
+    command: ["pserve", "/opt/gecosccui/gecoscc.ini", "http_port=8010"]
+
+  celery: 
+    container_name: celery
+    restart: 'no'
+    build: ./web
+    volumes:
+      - 'data_volume:/opt/gecoscc' 
+      - 'log_volume:/logs'
+    depends_on:
+      - mongo
+      - redis
+    command: ["pceleryd", "/opt/gecosccui/gecoscc.ini"]
+ 
+volumes:
+  log_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: '${PWD}/data/logs/'
+      o: bind
+  db_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: '${PWD}/data/db/'
+      o: bind
+  data_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: '${PWD}/data/gecoscc/'
+      o: bind
