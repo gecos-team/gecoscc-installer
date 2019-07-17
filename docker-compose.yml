@@ -18,6 +18,7 @@ services:
       - '6379'
   mongo:
     container_name: mongo
+    command: "mongod --smallfiles --dbpath /data/db --nojournal"
     restart: always
     build: ./mongodb
     ports:

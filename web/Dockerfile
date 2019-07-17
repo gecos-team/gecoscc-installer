@@ -18,10 +18,10 @@ RUN sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' 
 RUN useradd -d /opt/gecosccui -r -s /bin/false gecoscc
 RUN mkdir -p /opt/gecosccui/ && chown gecoscc /opt/gecosccui
 RUN mkdir -p /opt/gecoscc/ && chown gecoscc /opt/gecoscc
+RUN mkdir -p /logs/gecoscc/ && chown gecoscc /logs/gecoscc
 
 COPY gecoscc.ini /opt/gecosccui/ 
 RUN  chown gecoscc /opt/gecosccui/gecoscc.ini
-RUN  chown -R gecoscc /opt/gecoscc
 
 USER gecoscc
 WORKDIR /opt/gecosccui/
