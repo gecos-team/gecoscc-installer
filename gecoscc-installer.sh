@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 # GECOS Control Center Installer
 #
 # Authors: 
@@ -9,25 +9,23 @@
 # http://www.juntadeandalucia.es/
 #
 # Released under EUPL License V 1.1
-# http://www.osor.eu/eupl
+# http://www.osor.eu/eupl 
 
 set -u
 set -e
-set +o nounset
 
-ADMIN_USER=superadmin
-ADMIN_EMAIL=test@test.com
 CHEF_SERVER_VERSION="12.16.9"
 
 
 # START: MAIN MENU
 
-OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "Choose an option" 16 78 10 \
+OPTION=$(whiptail --title "GECOS Control Center Installation" --menu "Choose an option" 16 68 8 \
 "CC" "Install GECOS Control Center." \
-"USER" "Create a GECOS Control Center User." \
+"CCUSER" "Create a GECOS Control Center User." \
 "CHEF" "Install Chef server" \
+"CHEFUSER" "Create a CHEF User." \
 "SET_SUPERUSER" "Set Control Center Superuser as Chef Superuser." \
-)
+ 3>&1 1>&2 2>&3)
 
 
 case $OPTION in
@@ -48,7 +46,8 @@ echo "GECOS CONTROL CENTER INSTALLED"
 ;;
 
 
-USER)
+
+CCUSER)
 echo "CREATING CONTROL CENTER USER"
 docker exec -ti web pmanage gecoscc.ini create_adminuser --username $ADMIN_USER --email $ADMIN_EMAIL --is-superuser
 ;;
@@ -59,10 +58,16 @@ CHEF)
 
     echo "INSTALLING CHEF SERVER"
     echo "Please, check your FQDN, firewall, apparmor, ntp and mail configuration, before continuing"
+#   example for apparmor deactivation: aa-complain /etc/apparmor.d/*
+
+    read -p "Continue? (y/n)" -n 1 -r
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+          [[ "$0" = "$BASH_SOURCE" ]] && exit 1 
+    fi
+
     apt update
     apt install curl wget
-    aa-complain /etc/apparmor.d/*
-
 
     echo "Downloading package $CHEF_SERVER_PACKAGE_URL"
     curl -L "$CHEF_SERVER_PACKAGE_URL" > /tmp/chef-server.rpm
@@ -72,20 +77,36 @@ CHEF)
     echo "Configuring"
     chef-server-ctl reconfigure
 
-    echo "Creating an administrator account"
-    chef-server-ctl user-create $ADMIN_USER GECOS ADMIN $ADMIN_EMAIL '$ADMIN_PASSWORD' --filename /tmp/chefadmin.pem
-
-    mkdir -p /etc/opscode/
-    install_template "/etc/opscode/chef-server.rb" chef-server.rb 644 -subst
-
-    # Create the "default" organization
+     # Create the "default" organization
     chef-server-ctl org-create default default
 
     echo "CHEF SERVER INSTALLED"
     echo "Please, move /tmp/chefadmin.pem to a safe place."
 ;;
 
+CHEFUSER)
+echo "CREATING CHEF USER"
 
+ADMIN_USER=$(whiptail --inputbox "Username" 8 78 superadmin --title "Creating Chef User" 3>&1 1>&2 2>&3)
+[ -z "$ADMIN_USER" ] && exit 1
+ADMIN_EMAIL=$(whiptail --inputbox "E-Mail Address" 8 78 superadmin@test.com --title "Creating Chef User" 3>&1 1>&2 2>&3)
+[ -z "$ADMIN_EMAIL" ] && exit 1
+ADMIN_PASSWORD=$(whiptail --passwordbox "Password" 8 78 --title "Creating Chef User" 3>&1 1>&2 2>&3)
+[ -z "$ADMIN_PASSWORD" ] && exit 1
+ADMIN_PASSWORD2=$(whiptail --passwordbox "Repeat Password" 8 78 --title "Creating Chef User" 3>&1 1>&2 2>&3)
+[ -z "$ADMIN_PASSWORD2" ] && exit 1
+
+if [[ "$ADMIN_PASSWORD" != "$ADMIN_PASSWORD2" ]]
+then
+    whiptail --msgbox "Password are diferent!" 8 78 --title "Creating Chef User" 3>&1 1>&2 2>&3
+    exit 1
+fi
+
+chef-server-ctl user-create $ADMIN_USER GECOS ADMIN $ADMIN_EMAIL "$ADMIN_PASSWORD" --filename /tmp/chefadmin.pem
+
+whiptail --msgbox "User $ADMIN_USER created. Please, move your keyfile /tmp/chefadmin.pem to a safe place" 8 78 --title "Creating Chef User" 3>&1 1>&2 2>&3
+
+;;
 
 
 esac

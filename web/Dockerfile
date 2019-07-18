@@ -6,7 +6,7 @@ ARG DISTRIBUTION=jessie
 ARG CHEF_CLIENT_URL=https://packages.chef.io/files/stable/chef/12.22.5/debian/8/chef_12.22.5-1_amd64.deb
 
 RUN printf "deb http://archive.debian.org/debian/ $DISTRIBUTION main\ndeb-src http://archive.debian.org/debian/ $DISTRIBUTION main\ndeb http://security.debian.org $DISTRIBUTION/updates main\ndeb-src http://security.debian.org $DISTRIBUTION/updates main" > /etc/apt/sources.list
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales lsof unzip wget  
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales lsof unzip   
 
 RUN wget $CHEF_CLIENT_URL -O /tmp/chef.deb
 RUN dpkg -i /tmp/chef.deb
