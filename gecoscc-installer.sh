@@ -83,14 +83,18 @@ CHEF)
     wget https://packages.chef.io/files/stable/chef-server/${CHEF_SERVER_VERSION}/ubuntu/18.04/chef-server-core_${CHEF_SERVER_VERSION}-1_amd64.deb
     echo "Installing package"  
     dpkg -i chef-server-core_${CHEF_SERVER_VERSION}-1_amd64.deb
+
+    # Non serving on port 80 (just in case you install Control Center and Chef in the same machine)
+    echo "nginx['non_ssl_port'] = false" > /etc/opscode/chef-server.rb
+
     echo "Configuring"
     chef-server-ctl reconfigure
 
-     # Create the "default" organization
+    # Create the "default" organization
     chef-server-ctl org-create default default
 
     echo "CHEF SERVER INSTALLED"
-    echo "Please, move /tmp/chefadmin.pem to a safe place."
+    echo "Please, copy /etc/opscode/pivotal.pem to a safe place."
 ;;
 
 CHEFUSER)
