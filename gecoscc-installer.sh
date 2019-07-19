@@ -14,7 +14,7 @@
 set -u
 set -e
 
-CHEF_SERVER_VERSION="12.16.9"
+CHEF_SERVER_VERSION="12.18.14"  # For Ubuntu 18.04
 
 
 # START: MAIN MENU
@@ -49,7 +49,17 @@ echo "GECOS CONTROL CENTER INSTALLED"
 
 CCUSER)
 echo "CREATING CONTROL CENTER USER"
+
+ADMIN_USER=$(whiptail --inputbox "Username" 8 78 superadmin --title "Creating Control Center User" 3>&1 1>&2 2>&3)
+[ -z "$ADMIN_USER" ] && exit 1
+ADMIN_EMAIL=$(whiptail --inputbox "E-Mail Address" 8 78 superadmin@test.com --title "Creating Control Center User" 3>&1 1>&2 2>&3)
+[ -z "$ADMIN_EMAIL" ] && exit 1
+
 docker exec -ti web pmanage gecoscc.ini create_adminuser --username $ADMIN_USER --email $ADMIN_EMAIL --is-superuser
+
+whiptail --msgbox "User $ADMIN_USER created." 8 78 --title "Creating Chef User" 3>&1 1>&2 2>&3
+
+
 ;;
 
 
@@ -69,8 +79,7 @@ CHEF)
     apt update
     apt install curl wget
 
-    echo "Downloading package $CHEF_SERVER_PACKAGE_URL"
-    curl -L "$CHEF_SERVER_PACKAGE_URL" > /tmp/chef-server.rpm
+    echo "Downloading Chef package $CHEF_SERVER_VERSION"
     wget https://packages.chef.io/files/stable/chef-server/${CHEF_SERVER_VERSION}/ubuntu/18.04/chef-server-core_${CHEF_SERVER_VERSION}-1_amd64.deb
     echo "Installing package"  
     dpkg -i chef-server-core_${CHEF_SERVER_VERSION}-1_amd64.deb

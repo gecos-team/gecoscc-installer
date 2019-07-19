@@ -27,6 +27,7 @@ RUN mkdir -p /opt/gecoscc/ && chown gecoscc /opt/gecoscc
 RUN mkdir -p /logs/gecoscc/ && chown gecoscc /logs/gecoscc
 
 COPY gecoscc.ini /opt/gecosccui/ 
+RUN  sed s/CHEF_URL/localhost/  /opt/gecosccui/gecoscc.ini
 RUN  chown gecoscc /opt/gecosccui/gecoscc.ini
 
 USER gecoscc
