@@ -354,6 +354,30 @@ then
 	ln -s /hab/svc/chef-server-ctl/config/hab-secrets-config.json /data/chef/opscode/private-chef-secrets.json
 fi
 
+mkdir -p /opt/gecoscc/scripts/
+if [ ! -f /opt/gecoscc/scripts/chef_backup.sh ]
+then 
+	curl https://github.com/gecos-team/gecoscc-ui/raw/master/gecoscc/scripts/chef_backup.sh -o /opt/gecoscc/scripts/chef_backup.sh
+fi
+
+if [ ! -f /opt/gecoscc/scripts/chef_restore.sh ]
+then 
+	curl https://github.com/gecos-team/gecoscc-ui/raw/master/gecoscc/scripts/chef_restore.sh -o /opt/gecoscc/scripts/chef_restore.sh
+fi
+
+
+if [ ! -x /opt/gecoscc/scripts/chef_backup.sh ]
+then 
+	chmod 755 /opt/gecoscc/scripts/chef_backup.sh
+fi
+
+if [ ! -x /opt/gecoscc/scripts/chef_restore.sh ]
+then 
+	chmod 755 /opt/gecoscc/scripts/chef_restore.sh
+fi
+
+
+
 cp $BASE/CTL_SECRET /data/chef/CTL_SECRET
 
 
