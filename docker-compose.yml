@@ -171,6 +171,7 @@ services:
     volumes:
       - 'log_volume:/logs'
   redis:
+    network_mode: host
     container_name: redis
     restart: always
     build: ./redis
