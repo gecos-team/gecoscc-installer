@@ -199,6 +199,8 @@ services:
 
     ports:
       - '8010:8010'
+      - '8011:8011'
+      - '9001:9001'
     volumes:
       - 'data_volume:/opt/gecoscc' 
       - 'log_volume:/logs'
@@ -206,20 +208,7 @@ services:
     depends_on:
       - mongo
       - redis
-    command: ["pserve", "/opt/gecosccui/gecoscc.ini", "http_port=8010"]
-
-  celery:
-    network_mode: host
-    container_name: celery
-    restart: 'no'
-    build: ./web
-    volumes:
-      - 'data_volume:/opt/gecoscc' 
-      - 'log_volume:/logs'
-    depends_on:
-      - mongo
-      - redis
-    command: ["pceleryd", "/opt/gecosccui/gecoscc.ini"]
+    command: ["supervisord", "-n", "-c", "/opt/gecosccui/supervisord.conf"]
  
 volumes:
   chef-config-data:
