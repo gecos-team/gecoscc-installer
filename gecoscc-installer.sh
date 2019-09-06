@@ -53,10 +53,6 @@ GECOS_OHAI_VER=1.12.0
 export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/$GECOS_WS_MGMT_VER.zip"
 export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/$GECOS_OHAI_VER.zip"
 
-# Test
-GCC_URL='file:///home/amacias/gecoscc-installer.zip'
-
-
 
 # -------------------------------- setup constants END -----------------------
 
@@ -157,8 +153,9 @@ function docker_checking {
 	fi
 
 	# Checking if docker service is started
-	/bin/systemctl status docker.service >/dev/null
-	if [ $? -ne  0 ]
+	RUNNING=0
+	/bin/systemctl is-active --quiet docker.service && RUNNING=1
+	if [ $RUNNING -eq  0 ]
 	then
 		# Start the docker service
 		/bin/systemctl start docker.service
@@ -211,8 +208,9 @@ function firewall_checking {
 	fi
 
 	# Checking if firewalld service is started
-	/bin/systemctl status firewalld >/dev/null
-	if [ $? -ne  0 ]
+	RUNNING=0
+	/bin/systemctl is-active --quiet firewalld && RUNNING=1
+	if [ $RUNNING -eq  0 ]
 	then
 		# Start the firewalld service
 		/bin/systemctl start firewalld
@@ -223,6 +221,8 @@ function firewall_checking {
 
     # Enable masquerade for port forward
 	firewall-cmd --permanent --zone=public --add-masquerade > /dev/null 2>&1
+
+	firewall-cmd --reload
 }
 
 
