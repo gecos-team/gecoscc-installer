@@ -118,15 +118,27 @@ function OS_checking {
 }
 
 function RAM_checking {
-	TotalRAM=`cat /proc/meminfo | grep MemTotal: | awk -F ' ' '{ print $2 }'`
+	MEMINFO='/proc/meminfo'
+	if [ -f $MEMINFO ] ; then
+		TotalRAM=`cat $MEMINFO | grep MemTotal: | awk -F ' ' '{ print $2 }'`
 
-    if [ $TotalRAM -lt "5900000" ] ; then
-        echo "The host machine needs at least 6 GB of RAM."
-        echo "Please, check documentation for more information:"
-        echo "https://github.com/gecos-team/gecoscc-installer/blob/master/README.md"
-        echo "Aborting installation process."
-        exit 2
-    fi
+		if [ ! $TotalRAM ] ; then
+			echo "WARNING: Can't check the amount of RAM. Please ensure that this server has at least 6GB or RAM"
+		else
+			if [ $TotalRAM -lt "5900000" ] ; then
+				echo "The host machine needs at least 6 GB of RAM."
+				echo "Please, check documentation for more information:"
+				echo "https://github.com/gecos-team/gecoscc-installer/blob/master/README.md"
+				echo "Aborting installation process."
+				exit 2
+			fi
+
+		fi
+	else
+		echo "WARNING: Can't check the amount of RAM. Please ensure that this server has at least 6GB or RAM"
+	
+	fi
+
 }
 
 
