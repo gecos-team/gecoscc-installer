@@ -207,6 +207,13 @@ function tools_checking {
 		yum -y install unzip
 	fi
 
+	# Checking if openssl is installed
+	if [ ! -x /usr/bin/openssl ]
+	then
+		echo "Installing openssl"
+		yum -y install openssl
+	fi
+
 }
 
 
@@ -456,13 +463,25 @@ done
 # Wait until the pivotal certificate exists
 while [ ! -f /data/chef/config/pivotal.pem ]
 do
+	echo "Waiting for pivotal certificate file to exists..."
 	sleep 3
-	echo "Waiting for pivotal certificate to exists..."
 done
 
-sleep 5
+echo "Private key exists!"
+
+# Check that the certificate is correct
+while ! openssl rsa -check -noout -in /data/chef/config/pivotal.pem > /dev/null 2>&1
+do
+        echo "Waiting for a VALID pivotal certificate to exists..."
+        sleep 3
+done
+
+echo "Private key is valid!"
+
+sleep 1
 
 # Check if the "default" organization exists
+echo "Check if the \"default\" organization exists"
 EXIST=$($RUN "docker exec -ti chef-server-ctl chef-server-ctl org-list | grep default | wc -l")
 if [ $EXIST -eq 0 ]
 then
