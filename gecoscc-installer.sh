@@ -245,6 +245,49 @@ function firewall_checking {
 }
 
 
+function opscode_chef_running_check {
+	# Check that there is an running Opscode chef installation
+
+	# Wait until the servers are online
+	ONLINE=0
+	while [ $ONLINE -eq 0 ]
+	do
+		sleep 3
+		echo "Waiting for gecoscc server to be online..."
+		curl -s -k https://localhost  > /dev/null && ONLINE=1
+	done
+
+	# Wait until status is "pong"
+	export PYTHONIOENCODING=utf8
+	STATUS=`curl -s -k https://localhost/_status | python -c "import sys, json; print json.load(sys.stdin)['status']"`
+	while [ $STATUS -ne 'pong' ]
+	do
+		sleep 3
+		echo "Waiting for gecoscc server status to be 'pong'..."
+		STATUS=`curl -s -k https://localhost/_status | python -c "import sys, json; print json.load(sys.stdin)['status']"`
+	done
+
+	# Wait until the pivotal certificate exists
+	while [ ! -f /data/chef/config/pivotal.pem ]
+	do
+		echo "Waiting for pivotal certificate file to exists..."
+		sleep 3
+	done
+
+	echo "Private key exists!"
+
+	# Check that the certificate is correct
+	while ! openssl rsa -check -noout -in /data/chef/config/pivotal.pem > /dev/null 2>&1
+	do
+		    echo "Waiting for a VALID pivotal certificate to exists..."
+		    sleep 3
+	done
+
+	echo "Private key is valid!"
+
+
+}
+
 
 # Checking if OS and version are right
 OS_checking
@@ -451,32 +494,7 @@ rm -f /data/chef/config/pivotal.pem
 /bin/systemctl start gecoscc.service
 
 
-# Wait until the servers are online
-ONLINE=0
-while [ $ONLINE -eq 0 ]
-do
-	sleep 3
-	echo "Waiting for gecoscc server to be online..."
-	curl -s -k https://localhost  > /dev/null && ONLINE=1
-done
-
-# Wait until the pivotal certificate exists
-while [ ! -f /data/chef/config/pivotal.pem ]
-do
-	echo "Waiting for pivotal certificate file to exists..."
-	sleep 3
-done
-
-echo "Private key exists!"
-
-# Check that the certificate is correct
-while ! openssl rsa -check -noout -in /data/chef/config/pivotal.pem > /dev/null 2>&1
-do
-        echo "Waiting for a VALID pivotal certificate to exists..."
-        sleep 3
-done
-
-echo "Private key is valid!"
+opscode_chef_running_check
 
 sleep 1
 
@@ -521,6 +539,8 @@ fi
 
 
 #docker exec -ti web pmanage gecoscc.ini create_adminuser --username $ADMIN_USER --email $ADMIN_EMAIL --is-superuser
+
+opscode_chef_running_check
 
 $RUN "docker exec -ti web pmanage gecoscc.ini create_chef_administrator -u $ADMIN_USER -e $ADMIN_EMAIL -a pivotal -s -k /etc/opscode/pivotal.pem  -n"
 
@@ -568,10 +588,12 @@ echo "CHEF USER CREATED!"
 
 
 PRINTERS)
+	opscode_chef_running_check
     echo "LOADING PRINTERS CATALOG"
     $RUN "docker exec -ti web pmanage gecoscc.ini update_printers"
 ;;
 PACKAGES)
+	opscode_chef_running_check
     echo "LOADING PACKAGES CATALOG"
     $RUN "docker exec -ti web pmanage gecoscc.ini synchronize_repositories"
 ;;
@@ -580,6 +602,8 @@ PACKAGES)
 
 POLICIES)
 echo "INSTALLING NEW POLICIES"
+
+opscode_chef_running_check
 
 echo "Download dependent cookbooks"
 
