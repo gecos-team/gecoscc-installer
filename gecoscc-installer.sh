@@ -400,9 +400,14 @@ syntax_check_cache_path  '/root/.chef/syntax_check_cache'
 cookbook_path            '/tmp/cookbooks/'
 EOF
 echo "Uploading policies to CHEF"
-/opt/opscode/bin/knife ssl fetch -c /tmp/knife.rb
-/opt/opscode/bin/knife cookbook upload -c /tmp/knife.rb -a
-#/usr/bin/knife cookbook upload -c /tmp/knife.rb -a
+
+export KNIFE=/opt/opscode/bin/knife
+if [ ! -f $KNIFE ]; then
+    KNIFE=/usr/bin/knife
+fi
+
+$KNIFE ssl fetch -c /tmp/knife.rb
+$KNIFE cookbook upload -c /tmp/knife.rb -a
 
 
 if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
