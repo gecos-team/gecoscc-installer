@@ -48,7 +48,7 @@ COOKBOOKSDIR='/opt/gecosccui/.chef/cookbooks'
 
 
 GECOS_WS_MGMT_VER=0.9.0
-GECOS_OHAI_VER=1.12.0
+GECOS_OHAI_VER=1.14.0
 
 export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/$GECOS_WS_MGMT_VER.zip"
 export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/$GECOS_OHAI_VER.zip"
