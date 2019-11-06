@@ -6,56 +6,56 @@ This script installs and configure [__GECOS Control Center__](https://gecos-team
 
 In order to get __GECOS Control Center__ installed, your server must have:
 
+__Minimal host__
 * 64-bits architecture
-* 4 GB of RAM memory on Red Hat servers and 2 GB on CentOS
-* 5 GB of free disk space in `/opt`
+* 1 CPU
+* * 6 GB of RAM memory 
+* Red Hat 7 / CentOS 6
+* 15 GB of free disk space in `/home`
 * An FQDN
 * Internet access
 
-This installer has been tested in [CentOS](https://centos.org) 6.x minimal (64bits) and [Red Hat Enterprise Linux](https://redhat.com) 6.x 64bits (base install). In case your operating system is Red Hat, you should have your suscription updated.
+__Recommended host__
+* 64-bits architecture
+* 4 CPU
+* 16 GB of RAM memory 
+* Red Hat 7 / CentOS 6
+* 15 GB of free disk space in `/home`
+* An FQDN
+* Internet access
+
+This installer has been tested in [CentOS](https://centos.org) 7 minimal (64bits) and [Red Hat Enterprise Linux](https://redhat.com) 7 64bits (base install). In case your operating system is Red Hat, you should have your suscription updated.
 
 ## Installation instructions
 
-![Installer Screenshot](./gecoscc-installer-01.png)
+![Installer Screenshot](./gecoscc-installer-docker-01.png)
 
 1. From your `root` account (or some other user with privileges), download the installer from [`http://bit.ly/gecoscc-installer`](http://bit.ly/gecoscc-installer).
 ~~~
 curl -L http://bit.ly/gecoscc-installer > gecoscc-installer.sh
 ~~~
 
-2. Edit the installer and change the variables `ORGANIZATION_NAME`, `ADMIN_USER_NAME` and `ADMIN_EMAIL`.
-~~~
-ORGANIZATION="Your Organization"
-ADMIN_USER_NAME="superuser"
-ADMIN_EMAIL="gecos@guadalinex.org"
-~~~
-
-3. Run the installer.
+2. Run the installer.
 ~~~
 bash gecoscc-installer.sh
 ~~~
 
-4. You have to install all the components in the menu, in the order specified:
-	1. CHEF
-	2. MONGODB
-	3. NGINX
-	4. CC
+The first time you run the installer several packages will be installed in your system (docker, docker-compose, firewalld, unzip, ...), so it might take a while before displaying the main menu.
 
- Please, note that after installing every piece of software, `gecoscc-installer.sh` will exit to the command line and you will have to run the script again.
+3. Select the `CC` option in the menu in order to install the GECOS Control Center.
 
-5. After installing __GECOS Control Center__ you should restart the server:
-~~~
-shutdown -r now 'restarting after install gecosCC'
-~~~
 
 ## Configuration
 
-1. Run the installer again, create an administrator user (`USER` option in the menu) and make it superuser (`SET_SUPERUSER` in the menu).
+1. Run the installer again, create an administrator user (`CCUSER` option in the menu).
 ~~~
 bash gecoscc-installer.sh
 ~~~
 
-2. Select `USER` to create your first superuser but remember that you can create more admins from the web interface. This command will show some messages with important data like your superadmin password. Do not forget to write them down!
+2. This command will show some messages with important data like your superadmin password. Do not forget to write them down!
+~~~
+The generated password to GCC is: xxxxx
+~~~
 
 3. Now you should be able to log in into your brand new __GECOS Control Center__, using your favorite web browser. Just point it to your server's name or IP address.
 
