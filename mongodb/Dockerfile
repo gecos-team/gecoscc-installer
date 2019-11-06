@@ -1,3 +1,3 @@
-FROM mongo:2.6.4
+FROM mongo:4.2
 MAINTAINER GECOS Team <gecos@guadalinex.org>
 
