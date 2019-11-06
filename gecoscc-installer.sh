@@ -38,7 +38,7 @@ export SUPERVISOR_PASSWORD=changeme
 
 export GECOSCC_VERSION='2.5.0'
 export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.9.0.zip"
-export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/2.0.1.zip"
+export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/1.14.0.zip"
 export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip"
 export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.5.0/templates/"
 
