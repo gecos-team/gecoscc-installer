@@ -38,7 +38,7 @@ export SUPERVISOR_PASSWORD=changeme
 
 export GECOSCC_VERSION='2.5.0'
 export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.9.0.zip"
-export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/2.0.1.zip"
+export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/1.14.0.zip"
 export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip"
 export TEMPLATES_URL="https://raw.githubusercontent.com/gecos-team/gecoscc-installer/2.5.0/templates/"
 
@@ -400,9 +400,14 @@ syntax_check_cache_path  '/root/.chef/syntax_check_cache'
 cookbook_path            '/tmp/cookbooks/'
 EOF
 echo "Uploading policies to CHEF"
-/opt/opscode/bin/knife ssl fetch -c /tmp/knife.rb
-/opt/opscode/bin/knife cookbook upload -c /tmp/knife.rb -a
-#/usr/bin/knife cookbook upload -c /tmp/knife.rb -a
+
+export KNIFE=/opt/opscode/bin/knife
+if [ ! -f $KNIFE ]; then
+    KNIFE=/usr/bin/knife
+fi
+
+$KNIFE ssl fetch -c /tmp/knife.rb
+$KNIFE cookbook upload -c /tmp/knife.rb -a
 
 
 if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
