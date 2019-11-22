@@ -10,7 +10,7 @@ __Minimal host__
 * 64-bits architecture
 * 1 CPU
 * * 6 GB of RAM memory 
-* Red Hat 7 / CentOS 6
+* Red Hat 7 / CentOS 7
 * 15 GB of free disk space in `/home`
 * An FQDN
 * Internet access
@@ -19,7 +19,7 @@ __Recommended host__
 * 64-bits architecture
 * 4 CPU
 * 16 GB of RAM memory 
-* Red Hat 7 / CentOS 6
+* Red Hat 7 / CentOS 7
 * 15 GB of free disk space in `/home`
 * An FQDN
 * Internet access
@@ -81,3 +81,4 @@ You can repeat these steps as many times as you need in order to keep your __GEC
 ![Installer Screenshot](./gecoscc-installer-02.png)
 
 Just point your web browser to your server's IP address and log in with your superuser information.
+
