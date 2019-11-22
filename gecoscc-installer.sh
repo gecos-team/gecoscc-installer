@@ -259,12 +259,22 @@ function opscode_chef_running_check {
 
 	# Wait until status is "pong"
 	export PYTHONIOENCODING=utf8
-	STATUS=`curl -s -k https://localhost/_status | python -c "import sys, json; print json.load(sys.stdin)['status']"`
-	while [ $STATUS -ne 'pong' ]
+	cat >/tmp/check_chef.py <<EOL
+import sys, json;
+
+try:
+    print json.load(sys.stdin)['status']
+except:
+    print "error"
+
+EOL
+
+	STATUS=`curl -s -k https://localhost/_status | python /tmp/check_chef.py`
+	while [ $STATUS != 'pong' ]
 	do
 		sleep 3
-		echo "Waiting for gecoscc server status to be 'pong'..."
-		STATUS=`curl -s -k https://localhost/_status | python -c "import sys, json; print json.load(sys.stdin)['status']"`
+		echo "Waiting for gecoscc server status to be 'pong'... (status=$STATUS)"
+		STATUS=`curl -s -k https://localhost/_status | python /tmp/check_chef.py`
 	done
 
 	# Wait until the pivotal certificate exists
