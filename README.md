@@ -9,9 +9,9 @@ In order to get __GECOS Control Center__ installed, your server must have:
 __Minimal host__
 * 64-bits architecture
 * 1 CPU
-* * 6 GB of RAM memory 
-* Red Hat 7 / CentOS 6
-* 15 GB of free disk space in `/home`
+* 6 GB of RAM memory 
+* Red Hat 7 / CentOS 7
+* 15 GB of free disk space in `/home` partition
 * An FQDN
 * Internet access
 
@@ -19,8 +19,8 @@ __Recommended host__
 * 64-bits architecture
 * 4 CPU
 * 16 GB of RAM memory 
-* Red Hat 7 / CentOS 6
-* 15 GB of free disk space in `/home`
+* Red Hat 7 / CentOS 7
+* 15 GB of free disk space in `/home` partition
 * An FQDN
 * Internet access
 
@@ -81,3 +81,28 @@ You can repeat these steps as many times as you need in order to keep your __GEC
 ![Installer Screenshot](./gecoscc-installer-02.png)
 
 Just point your web browser to your server's IP address and log in with your superuser information.
+
+## Troubleshooting
+* **What services must I check to ensure that everything is up and running?**
+You must check the "docker" service and the "firewalld" service.
+
+* **How can I check that all the docker containers are running?**
+The docker containers are created with the "gecos" user account. So you can check then by executing:
+~~~
+su - gecos
+docker ps
+~~~
+
+* **Where are the important data, configuration files and logs stored?**
+The data, configuration files and logs are stored in the /data directory.
+
+* **How can I see the logs that are not stored in the /data directory?**
+You can see them by using the "docker logs" command.
+
+* **What ports are opened in the host machine?**
+The opened ports are: TCP 80 (GECOS Control Center) and TCP 443 (Opscode Chef Server). The TCP 443 port is opened (on service start) and closed (on service stop) in the "gecoscc" service configuration file (/etc/systemd/system/gecoscc.service). Firewalld is used to redirect the traffic from TCP 443 port to TCP 80443 port.
+
+
+
+
+

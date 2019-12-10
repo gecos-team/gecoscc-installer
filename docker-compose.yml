@@ -122,7 +122,7 @@ services:
         keygen_cache_workers = 2
         keygen_cache_size = 10
         keygen_start_size = 0
-        keygen_timeout = 20000
+        keygen_timeout = 60000
     volumes:
       - /data/chef/CTL_SECRET:/hab/sup/default/CTL_SECRET
 
@@ -180,7 +180,7 @@ services:
   mongo:
     network_mode: host
     container_name: mongo
-    command: "mongod --smallfiles --dbpath /data/db --nojournal"
+    command: "mongod --dbpath /data/db --nojournal"
     restart: always
     build: ./mongodb
     ports:
