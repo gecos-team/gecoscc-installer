@@ -248,12 +248,12 @@ echo "Installing python2.7 on $OS_SYS"
 #install_package python27
 if ! rpm -q python27-python-devel-2.7.8-18.el6 ; then
     yum install -y \
-        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-1.1-25.el6.x86_64.rpm                    \
-        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-2.7.8-18.el6.x86_64.rpm           \
-        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-pip-8.1.2-1.el6.noarch.rpm        \
-        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-libs-2.7.8-18.el6.x86_64.rpm      \
-        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-devel-2.7.8-18.el6.x86_64.rpm     \
-        http://mirror.centos.org/centos/6/sclo/x86_64/rh/python27/python27-python-setuptools-0.9.8-4.el6.noarch.rpm
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-1.1-25.el6.x86_64.rpm                    \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-2.7.8-18.el6.x86_64.rpm           \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-pip-8.1.2-1.el6.noarch.rpm        \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-libs-2.7.8-18.el6.x86_64.rpm      \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-devel-2.7.8-18.el6.x86_64.rpm     \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-setuptools-0.9.8-4.el6.noarch.rpm
 fi
 
 source /opt/rh/python27/enable
