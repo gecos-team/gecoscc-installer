@@ -191,12 +191,12 @@ MONGODB)
 
 # Add mongodb repository
 cat > /etc/yum.repos.d/mongodb.repo <<EOF
-[mongodb]
-name=mongodb RPM Repository
-baseurl=http://downloads-distro.mongodb.org/repo/redhat/os/x86_64
+[mongodb-org-4.2]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.2/x86_64/
+gpgcheck=1
 enabled=1
-gpgcheck=0
-sslverify=1
+gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc
 EOF
 
 echo "Installing mongodb package"
