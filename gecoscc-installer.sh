@@ -302,7 +302,12 @@ echo "Configuring user (gecoscc) and directory permissions"
  mkdir -p /opt/gecoscc/updates
 [ ! -d /opt/gecoscc/scripts ] && \
  mkdir -p /opt/gecoscc/scripts
-cp -r /opt/gecosccui-$GECOSCC_VERSION/lib64/python2.7/site-packages/gecoscc/scripts/*  /opt/gecoscc/scripts/
+if [ -d /opt/gecosccui-$GECOSCC_VERSION/lib64/python2.7/site-packages/gecoscc/scripts ]
+then
+    cp -r /opt/gecosccui-$GECOSCC_VERSION/lib64/python2.7/site-packages/gecoscc/scripts/*  /opt/gecoscc/scripts/
+else
+    cp -r /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/gecoscc/scripts/*  /opt/gecoscc/scripts/
+fi
 chown -R gecoscc:gecoscc /opt/gecoscc
 chown -R gecoscc:gecoscc /opt/gecosccui-$GECOSCC_VERSION/
 chmod -t /tmp
