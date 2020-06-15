@@ -56,6 +56,14 @@ export HELP_POLICY_URL="https://github.com/gecos-team/gecos-doc/wiki/Politicas:"
 function install_template {
     filename=$(basename "$1")
     curl "$TEMPLATES_URL/$2" > /tmp/$filename.tmp
+    # Verify that the template file contains at least 10 lines
+    nlines=$(cat /tmp/$filename.tmp | wc -l)
+    if [ $nlines -lt 10 ]
+    then
+        echo "ERROR: $filename template contains less than 10 lines!"
+        exit -1
+    fi
+
     if [ "$4" == "-subst" ] 
         then
             lines="$(cat /tmp/$filename.tmp)"
