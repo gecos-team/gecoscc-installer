@@ -36,7 +36,7 @@ export CHEF_SUPERADMIN_CERTIFICATE="/etc/opscode/pivotal.pem"
 export SUPERVISOR_USER_NAME=internal
 export SUPERVISOR_PASSWORD=changeme
 
-export GECOSCC_VERSION='2.5.0'
+export GECOSCC_VERSION='2.6.0'
 export GECOSCC_POLICIES_URL="https://github.com/gecos-team/gecos-workstation-management-cookbook/archive/0.11.2.zip"
 export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-cookbook/archive/1.15.1.zip"
 export GECOSCC_URL="https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip"
