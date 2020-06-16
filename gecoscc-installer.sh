@@ -397,10 +397,10 @@ echo "Downloading dependent cookbooks"
 download_cookbook chef-client 4.3.1
 download_cookbook apt 2.8.2
 download_cookbook windows 1.38.2
-download_cookbook chef_handler 1.2.0
+download_cookbook chef_handler 2.1.2
 download_cookbook logrotate 1.9.2
-download_cookbook cron 1.7.0
-download_cookbook compat_resource 12.19.1
+download_cookbook cron 5.0.0
+#download_cookbook compat_resource 12.19.1
 
 
 cat > /tmp/knife.rb << EOF
@@ -415,9 +415,14 @@ EOF
 
 # Using chef client knife instead of chef server embedded one. This one shows an json deep nesting error with our cookbook.
 echo "Uploading policies to CHEF"
-/opt/opscode/bin/knife ssl fetch -c /tmp/knife.rb
-/opt/opscode/bin/knife cookbook upload -c /tmp/knife.rb -a
-#/usr/bin/knife cookbook upload -c /tmp/knife.rb -a
+
+export KNIFE=/opt/opscode/bin/knife
+if [ ! -f $KNIFE ]; then
+    KNIFE=/usr/bin/knife
+fi
+
+$KNIFE ssl fetch -c /tmp/knife.rb
+$KNIFE cookbook upload -c /tmp/knife.rb -a
 
 
 if [ -e /opt/gecosccui-$GECOSCC_VERSION/bin/pmanage ]; then
