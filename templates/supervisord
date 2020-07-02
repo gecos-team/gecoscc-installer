@@ -24,19 +24,19 @@ source /opt/rh/python27/enable
 # Service-specific variables
 
 # Service execution details
-
-EXECUTE="/opt/gecosccui-${GECOSCC_VERSION}/bin/supervisord"
+VERSION="${GECOSCC_VERSION}"
+EXECUTE="/opt/gecosccui-$VERSION/bin/supervisord"
 PROCESS="supervisord"
 PROGRAM="supervisord"
 TIMEOUT="5"
 
 [ -e /etc/sysconfig/$PROGRAM ] && . /etc/sysconfig/$PROGRAM
 [ -f /opt/rh/python27/enable ] && source /opt/rh/python27/enable
-[ -f /opt/gecosccui-${GECOSCC_VERSION}/bin/activate ] && source /opt/gecosccui-${GECOSCC_VERSION}/bin/activate
+[ -f /opt/gecosccui-$VERSION/bin/activate ] && source /opt/gecosccui-$VERSION/bin/activate
 
-PID_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/run/supervisord.pid
-LCK_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/run/supervisord.lock
-LOG_FILE=/opt/gecosccui-${GECOSCC_VERSION}/supervisor/log/supervisord.log
+PID_FILE=/opt/gecosccui-$VERSION/supervisor/run/supervisord.pid
+LCK_FILE=/opt/gecosccui-$VERSION/supervisor/run/supervisord.lock
+LOG_FILE=/opt/gecosccui-$VERSION/supervisor/log/supervisord.log
 RUN_USER=gecoscc
 
 RETVAL=0
@@ -48,11 +48,11 @@ start() {
     echo -n "Starting $PROGRAM: "
 
     # change to CC directory to avoid some errors when user is not root
-    cd /opt/gecosccui-${GECOSCC_VERSION}
+    cd /opt/gecosccui-$VERSION
     # We do NOT expect executable to fork. Disown.
     daemon --user "$RUN_USER"     \
            --pidfile="$PID_FILE"  \
-           "$EXECUTE  -n -c /opt/gecosccui-${GECOSCC_VERSION}/supervisord.conf &> /dev/null & child_pid=\$! && disown \$child_pid && echo \$child_pid > '$PID_FILE'"
+           "$EXECUTE  -n -c /opt/gecosccui-$VERSION/supervisord.conf &> /dev/null & child_pid=\$! && disown \$child_pid && echo \$child_pid > '$PID_FILE'"
     RETVAL=$?
     echo
     if [ $RETVAL -eq 0 ] ; then
