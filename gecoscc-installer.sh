@@ -254,14 +254,19 @@ if ! rpm -q python27-python-devel-2.7.8-18.el6 ; then
         http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-libs-2.7.8-18.el6.x86_64.rpm          \
         http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-devel-2.7.8-18.el6.x86_64.rpm         \
         http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-setuptools-0.9.8-4.el6.noarch.rpm     \
-		http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-runtime-1.1-25.el6.x86_64.rpm                \
-		http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-virtualenv-13.1.0-2.el6.noarch.rpm    \
-		http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-nose-1.3.0-1.sc1.el6.noarch.rpm       \
-		http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-werkzeug-0.8.3-5.sc1.el6.noarch.rpm   \
-		http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-sqlalchemy-0.7.9-3.sc1.el6.x86_64.rpm \
-		http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-sphinx-1.1.3-7.sc1.el6.noarch.rpm     \
-		http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-simplejson-3.2.0-2.el6.x86_64.rpm     \
-		http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-wheel-0.24.0-2.el6.noarch.rpm
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-runtime-1.1-25.el6.x86_64.rpm                \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-virtualenv-13.1.0-2.el6.noarch.rpm    \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-nose-1.3.0-1.sc1.el6.noarch.rpm       \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-werkzeug-0.8.3-5.sc1.el6.noarch.rpm   \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-sqlalchemy-0.7.9-3.sc1.el6.x86_64.rpm \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-sphinx-1.1.3-7.sc1.el6.noarch.rpm     \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-simplejson-3.2.0-2.el6.x86_64.rpm     \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-wheel-0.24.0-2.el6.noarch.rpm         \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-docutils-0.11-2.el6.noarch.rpm        \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-jinja2-2.6-12.el6.noarch.rpm          \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-pygments-1.5-2.sc1.el6.noarch.rpm     \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-babel-0.9.6-7.sc1.el6.noarch.rpm      \
+        http://mirror.centos.org/centos/6/sclo/x86_64/rh/Packages/p/python27-python-markupsafe-0.11-11.sc1.el6.x86_64.rpm
 
 fi
 
