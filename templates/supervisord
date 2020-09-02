@@ -74,6 +74,9 @@ stop() {
         return $RETVAL
     fi
     rm -f $PID_FILE
+    
+    # Ensure that celery is stopped
+    killall -9 celery
     return $RETVAL
 }
 
