@@ -337,12 +337,6 @@ install_package gcc
 install_package rh-postgresql96-postgresql-devel.x86_64 # Check PostgreSQL version in Chef Server (with embedded pg_config)
 /opt/chef/embedded/bin/gem install knife-ec-backup -- --with-pg-config=/opt/rh/rh-postgresql96/root/usr/bin/pg_config
 
-# fixing gevent-socketio error
-sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
- /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/socketio/handler.py
-sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/' \
- /opt/gecosccui-$GECOSCC_VERSION/lib/python2.7/site-packages/socketio/transports.py
-
 # fixing celery and gunicorn issue with shared memory
 sed -i 's/^tmpfs/#tmpfs/' /etc/fstab
 echo -e "none\t\t\t/dev/shm\t\ttmpfs\trw,nosuid,nodev,noexec\t0 0" >> /etc/fstab 
