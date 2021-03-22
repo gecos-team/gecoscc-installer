@@ -1,16 +1,20 @@
-FROM python:2.7.9
+FROM debian:buster-slim
 
-ARG GECOSCC_VERSION=2.5.0 
+#ARG GECOSCC_VERSION=2.5.0 
+ARG GECOSCC_VERSION=development
 ARG GECOSCC_LANG=es_ES.UTF-8
-ARG DISTRIBUTION=jessie
+ARG REPOSITORY_URL=http://deb.debian.org/debian/
+ARG DISTRIBUTION=buster
 ARG CHEF_CLIENT_URL=https://packages.chef.io/files/stable/chef/12.22.5/debian/8/chef_12.22.5-1_amd64.deb
 ARG CHEF_SERVER_VERSION
 ARG CHEF_SERVER_URL
+ARG CHEF_SERVER_INTERNAL_URL
 ARG SUPERVISOR_USER_NAME=internal
 ARG SUPERVISOR_PASSWORD=changeme
+ARG MONGODB_URL
 
-RUN printf "deb http://archive.debian.org/debian/ $DISTRIBUTION main\ndeb-src http://archive.debian.org/debian/ $DISTRIBUTION main\ndeb http://security.debian.org $DISTRIBUTION/updates main\ndeb-src http://security.debian.org $DISTRIBUTION/updates main" > /etc/apt/sources.list
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales lsof unzip mongodb-clients gettext
+RUN printf "deb $REPOSITORY_URL $DISTRIBUTION main\ndeb-src $REPOSITORY_URL $DISTRIBUTION main\ndeb $REPOSITORY_URL $DISTRIBUTION-updates main\ndeb-src $REPOSITORY_URL $DISTRIBUTION-updates main\ndeb http://security.debian.org/debian-security/ $DISTRIBUTION/updates main\n" > /etc/apt/sources.list
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales lsof unzip mongo-tools gettext wget build-essential libreadline-dev zlib1g-dev flex bison libxml2-dev libxslt-dev libxml2-utils xsltproc libgetoptions-dev libssl-dev python3.7 python3.7-venv python3-pip
 
 # Install Chef client
 RUN wget $CHEF_CLIENT_URL -O /tmp/chef.deb && dpkg -i /tmp/chef.deb && rm  /tmp/chef.deb
@@ -23,7 +27,7 @@ RUN mkdir /tmp/build \
 	&& tar -zxf postgresql-9.2.8.tar.gz \
 	&& cd postgresql-9.2.8 \
 	&& export MAJOR_VER=9.2 \
-    && ./configure   --prefix=/opt/chef/embedded \
+    && LD_LIBRARY_PATH=/opt/chef/embedded/lib ./configure   --prefix=/opt/chef/embedded \
 		--mandir=/opt/chef/embedded/share/postgresql/${MAJOR_VER}/man \
 		--docdir=/opt/chef/embedded/share/doc/postgresql-doc-${MAJOR_VER} \
 		--sysconfdir=/etc/postgresql-common \
@@ -50,12 +54,25 @@ ENV LANG $GECOSCC_LANG
 ENV LC_ALL $GECOSCC_LANG  
 
 # Install supervisor GECOS CC
-RUN pip install supervisor \
-	&& pip install --upgrade https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip
+#RUN pip install supervisor \
+#	&& pip install --upgrade https://github.com/gecos-team/gecoscc-ui/archive/$GECOSCC_VERSION.zip
+
+RUN pip3 install supervisor \
+	&& pip3 install --upgrade https://github.com/System25/gecoscc-ui/archive/v3.zip
+
+
+# Fix python 3.8 errors in PyChef
+#RUN sed -i "10,15d" /usr/local/lib/python3.8/site-packages/chef/rsa.py \
+#    && sed -i 's/        _eay/    _eay/'  /usr/local/lib/python3.8/site-packages/chef/rsa.py
+
+# Fix a weird python 3 error that causes pyramid beaker to get stuck when
+# trying persist sessions information in MongoDB
+RUN sed -i "47 a \ \ \ \ \ \ \ \ self.db.collection_names()" \
+     /usr/local/lib/python3.7/dist-packages/beaker/ext/mongodb.py
 
 # Fixing gevent-socketio error
-RUN sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/'  /usr/local/lib/python2.7/site-packages/socketio/handler.py \
-	&& sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/'  /usr/local/lib/python2.7/site-packages/socketio/transports.py
+#RUN sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/'  /usr/local/lib/python2.7/site-packages/socketio/handler.py \
+#	&& sed -i 's/"Access-Control-Max-Age", 3600/"Access-Control-Max-Age", "3600"/'  /usr/local/lib/python2.7/site-packages/socketio/transports.py
 
 # Create GECOS CC user
 # (42 is the uid of "hab" user inside Chef server machines.
@@ -71,9 +88,11 @@ RUN mkdir -p /opt/gecosccui/ && chown gecoscc /opt/gecosccui \
 
 # Copy gecoscc.ini and replace values
 COPY gecoscc.ini /opt/gecosccui/ 
-RUN  sed -i "s|CHEF_SERVER|$CHEF_SERVER_URL|"  /opt/gecosccui/gecoscc.ini \
+RUN  sed -i "s|CHEF_SERVER_INTERNAL_URL|$CHEF_SERVER_INTERNAL_URL|"  /opt/gecosccui/gecoscc.ini \
+    && sed -i "s|CHEF_SERVER|$CHEF_SERVER_URL|"  /opt/gecosccui/gecoscc.ini \
 	&& sed -i "s|CHEF_VERSION|$CHEF_SERVER_VERSION|"  /opt/gecosccui/gecoscc.ini \
 	&& sed -i "s|GECOSCC_VERSION|$GECOSCC_VERSION|"  /opt/gecosccui/gecoscc.ini \
+	&& sed -i "s|MONGODB_URL|$MONGODB_URL|"  /opt/gecosccui/gecoscc.ini \
 	&& chown gecoscc /opt/gecosccui/gecoscc.ini
 
 
@@ -92,6 +111,5 @@ RUN  sed -i "s|CHEF_SERVER|$CHEF_SERVER_URL|"  /opt/gecosccui/.chef/knife.rb \
 USER gecoscc
 WORKDIR /opt/gecosccui/
 
-CMD ["pserve", "/opt/gecosccui/gecoscc.ini", "http_port=8010"]
-
+CMD ["supervisord", "-n", "-c", "/opt/gecosccui/supervisord.conf"]
 
