@@ -16,7 +16,7 @@ set -u
 set -e
 
 # Minimum host:
-#  - RHEL 7
+#  - RHEL 7 or 8
 #  - 1 CPU
 #  - 1 GB RAM
 #  - 20 GB HDD
@@ -25,7 +25,7 @@ set -e
 # Please edit the following variables
 
 # MongoDB database address
-MONGODB_URL=mongodb://192.168.11.234:27017/gecoscc
+MONGODB_URL=mongodb://<your mongodb server>:27017/gecoscc
 
 # Chef server URLs
 # - The internal URL will be the address that the GECOS CC will use to
@@ -33,16 +33,16 @@ MONGODB_URL=mongodb://192.168.11.234:27017/gecoscc
 # - The external URL will be the address that the Guadalinex GECOS based PCs
 #   will use to communicate with the Chef server.
 # (both addresses must point to the same server).
-CHEF_SERVER_INTERNAL_URL=https://devenv-chef.galia.local/
-CHEF_SERVER_URL=https://devenv-chef.galia.local/
+CHEF_SERVER_INTERNAL_URL=https://<your chef server>/
+CHEF_SERVER_URL=https://<your chef server>/
 CHEF_SERVER_VERSION="12.18.14" 
 
-CHEF_SERVER_PIVOTAL_CERT_PATH=/home/amacias/pivotal.pem
-CHEF_SERVER_WEBUI_CERT_PATH=/home/amacias/webui_priv.pem
+CHEF_SERVER_PIVOTAL_CERT_PATH=/path/to/your/pivotal.pem
+CHEF_SERVER_WEBUI_CERT_PATH=/path/to/your/webui_priv.pem
 
 # Redis databases
-SOCKJS_REDIS_SERVER_URL=redis://192.168.11.234/0
-CELERY_REDIS_SERVER_URL=redis://192.168.11.234:6379/1
+SOCKJS_REDIS_SERVER_URL=redis://<your redis server>:6379/0
+CELERY_REDIS_SERVER_URL=redis://<your redis server>:6379/1
 
 # Supervisor credentials
 SUPERVISOR_USER_NAME=internal
@@ -66,7 +66,7 @@ DOCKERIMGNAME=guadalinexgecos/gecoscc
 RUNUSER=gecos
 RUNGROUP=gecos
 COOKBOOKSDIR='/opt/gecosccui/.chef/cookbooks'
-GCC_URL="file:///home/amacias/gecoscc-installer.zip"
+GCC_URL="https://codeload.github.com/gecos-team/gecoscc-installer/zip/development-docker"
 
 
 GECOS_WS_MGMT_VER=0.11.4
@@ -79,6 +79,9 @@ export GECOSCC_OHAI_URL="https://github.com/gecos-team/gecos-workstation-ohai-co
 # -------------------------------- setup constants END -----------------------
 
 RUN="runuser -l $RUNUSER -c"
+
+DOCKER_BASE=docker
+PYTHON=python
 
 if [ "$USER" != "root" ]
 then
@@ -114,7 +117,7 @@ function OS_checking {
         exit 1
     fi
 
-    if [ "$OS_VER" -ne 7 ]
+    if [ "$OS_VER" -ne 7 ] && [ "$OS_VER" -ne 8 ] 
 	then
         echo "Operating System not supported: wrong version."
         echo "Please, check documentation for more information:"
@@ -122,6 +125,22 @@ function OS_checking {
         echo "Aborting installation process."
         exit 2
     fi
+
+    if [ "$OS_VER" -ne 7 ] 
+	then
+		DOCKER_BASE=docker-ce
+		PYTHON=python3
+		# Check docker repo
+		CONFIGURED=`dnf repolist -v | grep Repo-id | grep "docker" | wc -l`
+		if [ $CONFIGURED -ne  1 ]
+		then
+			# Add docker repo
+			dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+		fi
+    fi
+
+
+
 
 	# Check Elasticsearch configuration values
 	if [ $(sysctl -n vm.max_map_count) -ne  262144 ]
@@ -147,7 +166,7 @@ function RAM_checking {
 		if [ ! $TotalRAM ] ; then
 			echo "WARNING: Can't check the amount of RAM. Please ensure that this server has at least 6GB or RAM"
 		else
-			if [ $TotalRAM -lt "1014740" ] ; then
+			if [ $TotalRAM -lt "840936" ] ; then
 				echo "The host machine needs at least 1 GB of RAM."
 				echo "Please, check documentation for more information:"
 				echo "https://github.com/gecos-team/gecoscc-installer/blob/master/README.md"
@@ -182,7 +201,7 @@ function docker_checking {
 	if [ ! -x /usr/bin/docker ]
 	then
 		echo "Installing docker"
-		yum -y install docker
+		yum -y install $DOCKER_BASE
 		chkconfig docker on
 	fi
 
@@ -397,13 +416,13 @@ function opscode_chef_running_check {
 import sys, json;
 
 try:
-    print json.load(sys.stdin)['status']
+    print(json.load(sys.stdin)['status'])
 except:
-    print "error"
+    print("error")
 
 EOL
 
-	STATUS=`curl -s -k $CHEFADDR/_status | python /tmp/check_chef.py`
+	STATUS=`curl -s -k $CHEFADDR/_status | $PYTHON /tmp/check_chef.py`
 	if [ $STATUS != 'pong' ]
 	then
 		echo "Bad Chef server status: $CHEFADDR - $STATUS"
