@@ -16,6 +16,7 @@ services:
       - web
     volumes:
       - 'log_volume:/logs'
+      - 'nginx_conf_volume:/etc/nginx/sites-enabled/'
 
   web: 
     network_mode: host
@@ -57,5 +58,10 @@ volumes:
       type: none
       device: '/data/gecoscc/'
       o: bind
-
+  nginx_conf_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: '/data/nginx/'
+      o: bind
 
