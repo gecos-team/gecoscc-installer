@@ -128,6 +128,7 @@ function OS_checking {
 
     if [ "$OS_VER" -ne 7 ] 
 	then
+		# Note: sometimes it is necessary to remove podman and buildah before installing docker
 		DOCKER_BASE=docker-ce
 		PYTHON=python3
 		# Check docker repo
