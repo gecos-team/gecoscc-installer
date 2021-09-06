@@ -22,7 +22,7 @@ services:
     network_mode: host
     container_name: web
     restart: 'no'
-    image: guadalinexgecos/gecoscc:3.0.0
+    image: guadalinexgecos/gecoscc:3.0.1
     ports:
       - '8010:8010'
       - '8011:8011'
