@@ -14,7 +14,6 @@ services:
   postgresql:
     container_name: postgresql
     image: ${AUTOMATE_DOCKER_ORIGIN:-chefdemo}/postgresql:${AUTOMATE_VERSION:-stable}
-    network_mode: host
     environment:
       HAB_POSTGRESQL: |
         [superuser]
@@ -27,10 +26,7 @@ services:
   chef-server-ctl:
     container_name: chef-server-ctl
     image: ${CHEF_SERVER_DOCKER_ORIGIN:-chefserverofficial}/chef-server-ctl:${CHEF_SERVER_VERSION:-latest}
-    network_mode: host
-    command: --peer ${HOST_IP:-172.17.0.1}
-      --listen-gossip 0.0.0.0:9650
-      --listen-http 0.0.0.0:9660
+    command: --peer postgresql
     environment:
       HAB_CHEF_SERVER_CTL: |
         [chef_server_api]
@@ -45,10 +41,7 @@ services:
   elasticsearch:
     container_name: elasticsearch
     image: ${AUTOMATE_DOCKER_ORIGIN:-chefdemo}/elasticsearch5:${AUTOMATE_VERSION:-stable}
-    network_mode: host
-    command: --peer ${HOST_IP:-172.17.0.1}
-      --listen-gossip 0.0.0.0:9651
-      --listen-http 0.0.0.0:9661
+    command: --peer postgresql
     ulimits:
       nofile:
         soft: 65536
@@ -60,36 +53,27 @@ services:
   oc_id:
     container_name: oc_id
     image: ${CHEF_SERVER_DOCKER_ORIGIN:-chefserverofficial}/oc_id:${CHEF_SERVER_VERSION:-latest}
-    network_mode: host
-    command: --peer ${HOST_IP:-172.17.0.1}
+    command: --peer postgresql
       --bind database:postgresql.default
       --bind chef-server-ctl:chef-server-ctl.default
-      --listen-gossip 0.0.0.0:9652
-      --listen-http 0.0.0.0:9662
     volumes:
       - /data/chef/CTL_SECRET:/hab/sup/default/CTL_SECRET
 
   bookshelf:
     container_name: bookshelf
     image: ${CHEF_SERVER_DOCKER_ORIGIN:-chefserverofficial}/bookshelf:${CHEF_SERVER_VERSION:-latest}
-    network_mode: host
-    command: --peer ${HOST_IP:-172.17.0.1}
+    command: --peer postgresql
       --bind database:postgresql.default
       --bind chef-server-ctl:chef-server-ctl.default
-      --listen-gossip 0.0.0.0:9653
-      --listen-http 0.0.0.0:9663
     volumes:
       - /data/chef/CTL_SECRET:/hab/sup/default/CTL_SECRET
 
   oc_bifrost:
     container_name: oc_bifrost
     image: ${CHEF_SERVER_DOCKER_ORIGIN:-chefserverofficial}/oc_bifrost:${CHEF_SERVER_VERSION:-latest}
-    network_mode: host
-    command: --peer ${HOST_IP:-172.17.0.1}
+    command: --peer postgresql
       --bind database:postgresql.default
       --bind chef-server-ctl:chef-server-ctl.default
-      --listen-gossip 0.0.0.0:9654
-      --listen-http 0.0.0.0:9664
     volumes:
       - /data/chef/CTL_SECRET:/hab/sup/default/CTL_SECRET
 
@@ -103,15 +87,12 @@ services:
         DEFAULT_ORG_NAME: ${DEFAULT_ORG_NAME:-default}
     volumes:
       - erchef-data:/hab/svc/oc_erchef/data
-    network_mode: host
-    command: --peer ${HOST_IP:-172.17.0.1}
+    command: --peer postgresql
       --bind bookshelf:bookshelf.default
       --bind oc_bifrost:oc_bifrost.default
       --bind database:postgresql.default
       --bind elasticsearch:elasticsearch5.default
       --bind chef-server-ctl:chef-server-ctl.default
-      --listen-gossip 0.0.0.0:9655
-      --listen-http 0.0.0.0:9665
     environment:
       HAB_OC_ERCHEF: |
         [data_collector]
@@ -141,16 +122,13 @@ services:
     volumes:
       - /data/chef/CTL_SECRET:/hab/sup/default/CTL_SECRET
       - nginx-data:/hab/svc/chef-server-nginx/data
-    network_mode: host
-    command: --peer ${HOST_IP:-172.17.0.1}
+    command: --peer postgresql
       --bind oc_erchef:oc_erchef.default
       --bind oc_bifrost:oc_bifrost.default
       --bind oc_id:oc_id.default
       --bind bookshelf:bookshelf.default
       --bind elasticsearch:elasticsearch5.default
       --bind chef-server-ctl:chef-server-ctl.default
-      --listen-gossip 0.0.0.0:9656
-      --listen-http 0.0.0.0:9666
     environment:
       HAB_CHEF_SERVER_NGINX: |
         access_log = "/dev/tty"
@@ -160,7 +138,6 @@ services:
       - '443:8443'
 
   nginx:
-    network_mode: host
     container_name: nginx
     restart: always
     build: ./nginx
@@ -170,45 +147,33 @@ services:
       - web
     volumes:
       - 'log_volume:/logs'
+
   redis:
-    network_mode: host
     container_name: redis
     restart: always
-    build: ./redis
-    ports:
-      - '6379'
+    image: redis:3.2.12
+
   mongo:
-    network_mode: host
     container_name: mongo
     command: "mongod --dbpath /data/db --nojournal"
     restart: always
-    build: ./mongodb
-    ports:
-      - '27017'
+    image: mongo:4.2
     volumes:
       - 'db_volume:/data/db'
+
   web: 
-    network_mode: host
     container_name: web
     restart: 'no'
-    build:
-      context: ./web
-      args:
-        CHEF_SERVER_URL: "${CHEF_SERVER_URL:-https://${HOST_IP:-172.17.0.1}"
-        CHEF_SERVER_VERSION: ${CHEF_SERVER_VERSION:-12.18.14}
+    image: guadalinexgecos/gecoscc:3.0.1
 
-    ports:
-      - '8010:8010'
-      - '8011:8011'
-      - '9001:9001'
     volumes:
       - 'data_volume:/opt/gecoscc' 
+      - 'conf_volume:/opt/gecosccui' 
       - 'log_volume:/logs'
       - chef-config-data:/etc/opscode
     depends_on:
       - mongo
       - redis
-    command: ["supervisord", "-n", "-c", "/opt/gecosccui/supervisord.conf"]
  
 volumes:
   chef-config-data:
@@ -217,48 +182,63 @@ volumes:
       type: none
       device: '/data/chef/config/'
       o: bind
+
   ctl-opscode-data:
     driver: local
     driver_opts:
       type: none
       device: '/data/chef/opscode/'
       o: bind
+
   postgresql-data:
     driver: local
     driver_opts:
       type: none
       device: '/data/chef/psql/'
       o: bind
+
   elasticsearch-data:
     driver: local
     driver_opts:
       type: none
       device: '/data/chef/elasticsearch/'
       o: bind
+
   erchef-data:
     driver: local
     driver_opts:
       type: none
       device: '/data/chef/erchef/'
       o: bind
+
   nginx-data:
     driver: local
     driver_opts:
       type: none
       device: '/data/chef/nginx/'
       o: bind
+
   log_volume:
     driver: local
     driver_opts:
       type: none
       device: '/data/logs/'
       o: bind
+
+  conf_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: '/data/conf/'
+      o: bind
+
   db_volume:
     driver: local
     driver_opts:
       type: none
       device: '/data/db/'
       o: bind
+
   data_volume:
     driver: local
     driver_opts:
