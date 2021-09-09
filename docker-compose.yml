@@ -13,6 +13,7 @@ version: '3'
 services:
   postgresql:
     container_name: postgresql
+    restart: always
     image: ${AUTOMATE_DOCKER_ORIGIN:-chefdemo}/postgresql:${AUTOMATE_VERSION:-stable}
     environment:
       HAB_POSTGRESQL: |
@@ -25,6 +26,7 @@ services:
 
   chef-server-ctl:
     container_name: chef-server-ctl
+    restart: always
     image: ${CHEF_SERVER_DOCKER_ORIGIN:-chefserverofficial}/chef-server-ctl:${CHEF_SERVER_VERSION:-latest}
     command: --peer postgresql
     environment:
@@ -40,6 +42,7 @@ services:
 
   elasticsearch:
     container_name: elasticsearch
+    restart: always
     image: ${AUTOMATE_DOCKER_ORIGIN:-chefdemo}/elasticsearch5:${AUTOMATE_VERSION:-stable}
     command: --peer postgresql
     ulimits:
@@ -52,6 +55,7 @@ services:
 
   oc_id:
     container_name: oc_id
+    restart: always
     image: ${CHEF_SERVER_DOCKER_ORIGIN:-chefserverofficial}/oc_id:${CHEF_SERVER_VERSION:-latest}
     command: --peer postgresql
       --bind database:postgresql.default
@@ -61,6 +65,7 @@ services:
 
   bookshelf:
     container_name: bookshelf
+    restart: always
     image: ${CHEF_SERVER_DOCKER_ORIGIN:-chefserverofficial}/bookshelf:${CHEF_SERVER_VERSION:-latest}
     command: --peer postgresql
       --bind database:postgresql.default
@@ -70,6 +75,7 @@ services:
 
   oc_bifrost:
     container_name: oc_bifrost
+    restart: always
     image: ${CHEF_SERVER_DOCKER_ORIGIN:-chefserverofficial}/oc_bifrost:${CHEF_SERVER_VERSION:-latest}
     command: --peer postgresql
       --bind database:postgresql.default
@@ -79,6 +85,7 @@ services:
 
   oc_erchef:
     container_name: oc_erchef
+    restart: always
     # image: ${CHEF_SERVER_DOCKER_ORIGIN:-chefserverofficial}/oc_erchef:${CHEF_SERVER_VERSION:-latest}
     # Building a custom image to set the default organization name
     build:
@@ -111,6 +118,7 @@ services:
 
   chef-server-nginx:
     container_name: chef-server-nginx
+    restart: always
     # Building a custom image to set the default organization name
     # image: ${CHEF_SERVER_DOCKER_ORIGIN:-chefserverofficial}/chef-server-nginx:${CHEF_SERVER_VERSION:-latest}
     build:
