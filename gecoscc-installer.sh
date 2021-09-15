@@ -793,7 +793,7 @@ fi
 
 
 chown -R $RUNUSER:$RUNGROUP $BASE
-chown -R $RUNUSER:$RUNGROUP /data/conf/.chef
+chown -R 42:$RUNGROUP /data/conf/.chef
 
 
 
