@@ -267,6 +267,12 @@ function tools_checking {
         yum -y install netcat
     fi
 
+    # Checking if python3 is installed
+    if [ ! -x /usr/bin/python3 ]
+    then
+        echo "Installing python3"
+        yum -y install python3
+    fi
 
 }
 
@@ -289,14 +295,29 @@ function firewall_checking {
         /bin/systemctl start firewalld
     fi
 
-    # Open NginX port
-    firewall-cmd --zone=public --add-port=80/tcp --permanent > /dev/null 2>&1
+    # Check if the ports are open
+    PORTS=`firewall-cmd --zone=public --list-ports`
+    PORTS="P $PORTS"
+    RELOAD=0
+    if [[ $PORTS != *" 80/tcp"* ]]
+    then
+        # Open NginX port
+        firewall-cmd --zone=public --add-port=80/tcp --permanent > /dev/null 2>&1
+        RELOAD=1
+    fi
 
-    # Open Chef port
-    firewall-cmd --zone=public --add-port=443/tcp --permanent > /dev/null 2>&1
+    if [[ $PORTS != *" 443/tcp"* ]]
+    then
+        # Open Chef port
+        firewall-cmd --zone=public --add-port=443/tcp --permanent > /dev/null 2>&1
+        RELOAD=1
+    fi
 
-
-    firewall-cmd --reload > /dev/null 2>&1
+    if [ $RELOAD -eq  1 ]
+    then
+        # Reload the firewall service
+        firewall-cmd --reload > /dev/null 2>&1
+    fi
 }
 
 
@@ -308,7 +329,7 @@ function opscode_chef_running_check {
     while [ $ONLINE -eq 0 ]
     do
         sleep 3
-        echo "Waiting for gecoscc server to be online..."
+        echo "Waiting for Opscode Chef server to be online..."
         curl -s -k https://localhost  > /dev/null && ONLINE=1
     done
 
@@ -324,12 +345,12 @@ except:
 
 EOL
 
-    STATUS=`curl -s -k https://localhost/_status | python /tmp/check_chef.py`
+    STATUS=`curl -s -k https://localhost/_status | python3 /tmp/check_chef.py`
     while [ $STATUS != 'pong' ]
     do
         sleep 3
-        echo "Waiting for gecoscc server status to be 'pong'... (status=$STATUS)"
-        STATUS=`curl -s -k https://localhost/_status | python /tmp/check_chef.py`
+        echo "Waiting for Opscode Chef server status to be 'pong'... (status=$STATUS)"
+        STATUS=`curl -s -k https://localhost/_status | python3 /tmp/check_chef.py`
     done
 
     # Wait until the pivotal certificate exists
@@ -389,8 +410,11 @@ case $OPTION in
 REMOVE)
 echo "UNINSTALLING GECOS CONTROL CENTER"
 
-# Stop the service
-/bin/systemctl stop gecoscc.service
+if [ -f /etc/systemd/system/gecoscc.service ]
+then
+    # Stop the service
+    /bin/systemctl stop gecoscc.service
+fi
 
 # Remove all containers
 CONTAINERS=$($RUN "docker ps -a -q | tr \"\\n\" ' '")
@@ -403,25 +427,25 @@ fi
 IMAGES=$($RUN "docker image list -q | tr \"\\n\" ' '")
 if [ "$IMAGES" != "" ]
 then
-	$RUN "docker rmi --force $IMAGES"
+    $RUN "docker rmi --force $IMAGES"
 fi
 
 # Remove all volumes
 VOLUMES=$($RUN "docker volume list -q | tr \"\\n\" ' '")
 if [ "$VOLUMES" != "" ]
 then
-	$RUN "docker volume rm $VOLUMES"
+    $RUN "docker volume rm $VOLUMES"
 fi
 
 # Remove the software directory
 rm -rf "/home/$RUNUSER/gecoscc-installer"
 
 # remove the RUN script
-rm /etc/systemd/system/gecoscc.service
+rm -f /etc/systemd/system/gecoscc.service
 /bin/systemctl daemon-reload
 
 # Remove the user
-userdel $RUNUSER
+userdel -r $RUNUSER
 
 # Remove the user home directory
 rm -rf "/home/$RUNUSER"
@@ -437,7 +461,7 @@ RUNUSER_EXISTS=`grep "^$RUNUSER:" /etc/passwd | wc -l`
 if [ $RUNUSER_EXISTS -eq 0 ]
 then
     # create run user
-    adduser $RUNUSER
+    adduser -u 42 $RUNUSER
 fi
 
 # Check if the user belongs to docker o dockerroot group
@@ -480,13 +504,14 @@ mkdir -p /data/conf
 mkdir -p /data/conf/.chef
 mkdir -p /data/db
 mkdir -p /data/gecoscc
+mkdir -p /data/gecoscc/media
 mkdir -p /data/chef/psql
 mkdir -p /data/chef/elasticsearch
 mkdir -p /data/chef/erchef
 mkdir -p /data/chef/nginx
 mkdir -p /data/chef/config
 mkdir -p /data/chef/opscode
-if [ ! -L /data/chef/opscode/private-chef-secrets.json ]
+if [ ! -e /data/chef/opscode/private-chef-secrets.json ]
 then
 	ln -s /hab/svc/chef-server-ctl/config/hab-secrets-config.json /data/chef/opscode/private-chef-secrets.json
 fi
@@ -549,7 +574,7 @@ cp $BASE/CTL_SECRET /data/chef/CTL_SECRET
 chown -R $RUNUSER:$RUNGROUP $BASE
 chown -R $RUNUSER:$RUNGROUP /data/conf/.chef
 
-
+chown -R 42 /data/gecoscc/media
 
 # Prepare the RUN script
 cat >/etc/systemd/system/gecoscc.service <<EOL
@@ -586,7 +611,33 @@ $RUN "cd $BASE; /usr/local/bin/docker-compose build"
 
 rm -f /data/chef/config/pivotal.pem
 
-# Start the service
+# Start the services one by one for the first initialization
+echo Start postgresql
+$RUN "cd $BASE; nohup /usr/local/bin/docker-compose up postgresql > /tmp/postgresql.log 2>&1 &"
+sleep 5
+echo Start chef-server-ctl
+$RUN "cd $BASE; nohup /usr/local/bin/docker-compose up chef-server-ctl > /tmp/chef-server-ctl.log 2>&1 &"
+sleep 5
+echo Start elasticsearch
+$RUN "cd $BASE; nohup /usr/local/bin/docker-compose up elasticsearch > /tmp/elasticsearch.log 2>&1 &"
+sleep 5
+echo Start oc_id
+$RUN "cd $BASE; nohup /usr/local/bin/docker-compose up oc_id > /tmp/oc_id.log 2>&1 &"
+sleep 5
+echo Start bookshelf
+$RUN "cd $BASE; nohup /usr/local/bin/docker-compose up bookshelf > /tmp/bookshelf.log 2>&1 &"
+sleep 5
+echo Start oc_bifrost
+$RUN "cd $BASE; nohup /usr/local/bin/docker-compose up oc_bifrost > /tmp/oc_bifrost.log 2>&1 &"
+sleep 5
+echo Start oc_erchef
+$RUN "cd $BASE; nohup /usr/local/bin/docker-compose up oc_erchef > /tmp/oc_erchef.log 2>&1 &"
+sleep 5
+echo Start chef-server-nginx
+$RUN "cd $BASE; nohup /usr/local/bin/docker-compose up chef-server-nginx > /tmp/oc_erchef.log 2>&1 &"
+sleep 5
+
+# Start GECOS services
 /bin/systemctl start gecoscc.service
 
 
@@ -649,31 +700,48 @@ echo "SET AS ADMIN USER"
 # properly managed :(
 $RUN "docker exec -ti chef-server-ctl cp /bin/chef-server-ctl /bin/chef-server-ctl-gecos"
 $RUN "docker exec -ti chef-server-ctl sed -i 's/export CHEF_SECRETS_DATA/#export CHEF_SECRETS_DATA/g' /bin/chef-server-ctl-gecos"
+rm /data/chef/opscode/private-chef-secrets.json
+$RUN "docker exec -ti chef-server-ctl cp /hab/svc/chef-server-ctl/config/hab-secrets-config.json /etc/opscode/private-chef-secrets.json"
 
 BIFROST_SUID=`$RUN "docker exec -ti chef-server-ctl chef-server-ctl-gecos show-secret oc_bifrost superuser_id"`
 BIFROST_SUID=`echo -n $BIFROST_SUID | sed "s/\r//"`
-echo "Bifrost superuser_id='$BIFROST_SUID'"
+
+ERCHEF_DB_PWD=`$RUN "docker exec -it oc_erchef cat /hab/svc/oc_erchef/config/sys.config" | grep db_pass`
+ERCHEF_DB_PWD=`echo -n $ERCHEF_DB_PWD | awk '{print $2}' | sed 's/"//g' | sed 's/}//g'  | sed 's/,//g'`
+ERCHEF_DB_USER=`$RUN "docker exec -it oc_erchef cat /hab/svc/oc_erchef/config/sys.config" | grep db_user`
+ERCHEF_DB_USER=`echo -n $ERCHEF_DB_USER | awk '{print $2}' | sed 's/"//g' | sed 's/}//g'  | sed 's/,//g'`
+ERCHEF_DB_USER=`echo -n $ERCHEF_DB_USER | sed "s/\r//"`
+
 
 cat >/data/chef/opscode/chef-server-running.json <<EOL
 {
   "private_chef": {
     "opscode-erchef": {
       "enable": true,
-      "sql_user": "hab"
+      "sql_user": "$ERCHEF_DB_USER"
     },
     "postgresql": {
       "version": "9.2",
-      "vip": "127.0.0.1",
+      "vip": "postgresql",
       "port": 5432
     },
     "oc_bifrost": {
-      "vip": "127.0.0.1",
+      "vip": "oc_bifrost",
       "port": 9463,
       "superuser_id": "$BIFROST_SUID"
     }
   }
 }
 EOL
+
+ERCHEF_PASSWORD=`$RUN "docker exec -ti chef-server-ctl chef-server-ctl-gecos show-secret opscode_erchef sql_password"`
+ERCHEF_PASSWORD=`echo -n $ERCHEF_PASSWORD | sed "s/\r//"`
+
+if [ $ERCHEF_PASSWORD != $ERCHEF_DB_PWD ]
+then
+    echo "Fix Opscode Chef service password"
+    sed -i "s/$ERCHEF_PASSWORD/$ERCHEF_DB_PWD/g" /data/chef/opscode/private-chef-secrets.json
+fi
 
 $RUN "docker exec -ti chef-server-ctl chef-server-ctl-gecos grant-server-admin-permissions $ADMIN_USER"
 
