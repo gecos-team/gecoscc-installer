@@ -666,7 +666,7 @@ RUNUSER_EXISTS=`grep "^$RUNUSER:" /etc/passwd | wc -l`
 if [ $RUNUSER_EXISTS -eq 0 ]
 then
     # create run user
-    adduser $RUNUSER
+    adduser -u 42 $RUNUSER
 fi
 
 # Check if the user belongs to docker o dockerroot group
