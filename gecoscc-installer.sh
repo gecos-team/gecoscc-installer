@@ -573,8 +573,7 @@ cp $BASE/CTL_SECRET /data/chef/CTL_SECRET
 
 chown -R $RUNUSER:$RUNGROUP $BASE
 chown -R $RUNUSER:$RUNGROUP /data/conf/.chef
-
-chown -R 42 /data/gecoscc/media
+chown -R $RUNUSER:$RUNGROUP /data/gecoscc
 
 # Prepare the RUN script
 cat >/etc/systemd/system/gecoscc.service <<EOL
