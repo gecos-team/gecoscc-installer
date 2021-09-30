@@ -45,7 +45,7 @@ fi
 # -------------------------------- setup constants START ---------------------
 DOCKERIMGNAME=guadalinexgecos/gecoscc
 RUNUSER=gecos
-RUNGROUP=gecos
+RUNGROUP=gecosgrp
 GCC_URL='https://codeload.github.com/gecos-team/gecoscc-installer/zip/dev-environment'
 COOKBOOKSDIR='/opt/gecosccui/.chef/cookbooks'
 
@@ -461,8 +461,26 @@ RUNUSER_EXISTS=`grep "^$RUNUSER:" /etc/passwd | wc -l`
 if [ $RUNUSER_EXISTS -eq 0 ]
 then
     # create run user
-    adduser -u 42 $RUNUSER
+    adduser $RUNUSER
 fi
+
+# Check that the run group exists
+RUNGROUP_EXISTS=`grep "^$RUNGROUP:" /etc/group | wc -l`
+if [ $RUNGROUP_EXISTS -eq 0 ]
+then
+    # create run group
+    groupadd $RUNGROUP
+fi
+
+
+# Check if the user belongs to the group
+BELONGS=`groups $RUNUSER | grep $RUNGROUP | wc -l`
+if [ $BELONGS -ne  1 ]
+then
+    usermod -aG $RUNGROUP $RUNUSER
+fi
+
+RUNGID=`getent group $RUNGROUP | cut -d: -f3`
 
 # Check if the user belongs to docker o dockerroot group
 DOCKERGROUP=`cat /etc/group | grep docker |  awk -F':' '{ print $1 }' | tail -n 1`
@@ -573,7 +591,11 @@ cp $BASE/CTL_SECRET /data/chef/CTL_SECRET
 
 chown -R $RUNUSER:$RUNGROUP $BASE
 chown -R $RUNUSER:$RUNGROUP /data/conf/.chef
+chmod 0774 /data/conf/.chef
 chown -R $RUNUSER:$RUNGROUP /data/gecoscc
+chmod 0774 /data/gecoscc
+chmod 0774 /data/gecoscc/media
+
 
 # Prepare the RUN script
 cat >/etc/systemd/system/gecoscc.service <<EOL
@@ -606,7 +628,7 @@ EOL
 $RUN "cd $BASE; /usr/local/bin/docker-compose pull"
 
 # Build the images
-$RUN "cd $BASE; /usr/local/bin/docker-compose build"
+$RUN "cd $BASE; SVC_GROUP=$RUNGROUP SVC_GID=$RUNGID /usr/local/bin/docker-compose build"
 
 rm -f /data/chef/config/pivotal.pem
 
@@ -697,8 +719,6 @@ echo "SET AS ADMIN USER"
 
 # Patching chef-server-ctl configuration because the configurations and credentials aren't
 # properly managed :(
-$RUN "docker exec -ti chef-server-ctl cp /bin/chef-server-ctl /bin/chef-server-ctl-gecos"
-$RUN "docker exec -ti chef-server-ctl sed -i 's/export CHEF_SECRETS_DATA/#export CHEF_SECRETS_DATA/g' /bin/chef-server-ctl-gecos"
 rm /data/chef/opscode/private-chef-secrets.json
 $RUN "docker exec -ti chef-server-ctl cp /hab/svc/chef-server-ctl/config/hab-secrets-config.json /etc/opscode/private-chef-secrets.json"
 
