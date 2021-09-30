@@ -9,6 +9,8 @@
 # AUTOMATE_ENABLED - enable the Automate data collector (true or false)
 # AUTOMATE_SERVER - the IP address or hostname of the Automate server
 # AUTOMATE_TOKEN - the token for the Automate server data collector
+# SVC_GID - Execution group ID
+# SVC_GROUP - Execution group name
 version: '3'
 services:
   postgresql:
@@ -27,7 +29,13 @@ services:
   chef-server-ctl:
     container_name: chef-server-ctl
     restart: always
-    image: ${CHEF_SERVER_DOCKER_ORIGIN:-chefserverofficial}/chef-server-ctl:${CHEF_SERVER_VERSION:-latest}
+    # Building an image to set a different group for habitat services
+    #image: ${CHEF_SERVER_DOCKER_ORIGIN:-chefserverofficial}/chef-server-ctl:${CHEF_SERVER_VERSION:-latest}
+    build:
+      context: ./chef_server_ctl
+      args:
+        SVC_GROUP: ${SVC_GROUP:-gecosgrp}
+        SVC_GID: ${SVC_GID:-69}
     command: --peer postgresql
     environment:
       HAB_CHEF_SERVER_CTL: |
@@ -172,7 +180,13 @@ services:
   web: 
     container_name: web
     restart: 'no'
-    image: guadalinexgecos/gecoscc:3.0.1
+    # Building an image to use the same group has Chef's "hab" user
+    # image: guadalinexgecos/gecoscc:3.0.1
+    build:
+      context: ./web
+      args:
+        SVC_GROUP: ${SVC_GROUP:-gecosgrp}
+        SVC_GID: ${SVC_GID:-69}
 
     volumes:
       - 'data_volume:/opt/gecoscc' 
